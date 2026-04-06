@@ -1,0 +1,949 @@
+[
+    {
+        "id": "tab_gh",
+        "type": "tab",
+        "label": "Smart Greenhouse",
+        "disabled": false,
+        "info": "BMIT2123 Module 3 — Smart Greenhouse IoT Monitor Dashboard"
+    },
+    {
+        "id": "inject_poll",
+        "type": "inject",
+        "z": "tab_gh",
+        "name": "Poll Firebase /sensors/current every 5s",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "5",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.5,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 150,
+        "y": 60,
+        "wires": [
+            [
+                "http_get_sensors",
+                "http_get_actuators",
+                "http_get_alerts"
+            ]
+        ]
+    },
+    {
+        "id": "http_get_sensors",
+        "type": "http request",
+        "z": "tab_gh",
+        "name": "GET /sensors/current",
+        "method": "GET",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "https://iot-greenhouse-assignment-default-rtdb.firebaseio.com/sensors/current.json?auth=YOUR_DB_SECRET",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 430,
+        "y": 40,
+        "wires": [
+            [
+                "fn_parse_sensors"
+            ]
+        ]
+    },
+    {
+        "id": "http_get_actuators",
+        "type": "http request",
+        "z": "tab_gh",
+        "name": "GET /actuators/status",
+        "method": "GET",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "https://iot-greenhouse-assignment-default-rtdb.firebaseio.com/actuators/status.json?auth=YOUR_DB_SECRET",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 430,
+        "y": 100,
+        "wires": [
+            [
+                "fn_parse_actuators"
+            ]
+        ]
+    },
+    {
+        "id": "http_get_alerts",
+        "type": "http request",
+        "z": "tab_gh",
+        "name": "GET /alerts (last 5)",
+        "method": "GET",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "https://iot-greenhouse-assignment-default-rtdb.firebaseio.com/alerts.json?auth=YOUR_DB_SECRET&orderBy=\"$key\"&limitToLast=5",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 430,
+        "y": 160,
+        "wires": [
+            [
+                "fn_parse_alerts"
+            ]
+        ]
+    },
+    {
+        "id": "fn_parse_sensors",
+        "type": "function",
+        "z": "tab_gh",
+        "name": "Parse Sensor Data → Route to Widgets",
+        "func": "var d = msg.payload;\nif (!d || typeof d !== 'object') { node.warn('No sensor data'); return null; }\n\nvar temp     = parseFloat(d.temperature) || 0;\nvar humi     = parseFloat(d.humidity)    || 0;\nvar soilPct  = parseInt(d.soil_pct)      || 0;\nvar lightPct = parseInt(d.light_pct)     || 0;\nvar soilRaw  = parseInt(d.soil_raw)      || 0;\n\n// Soil status label\nvar soilLabel  = soilPct < 30 ? 'DRY 🔴' : soilPct > 80 ? 'WET SATURATED 🔵' : 'GOOD 🟢';\nvar soilColour = soilPct < 30 ? '#e63946' : soilPct > 80 ? '#2196F3' : '#4CAF50';\n\n// Light status\nvar hour = new Date().getHours();\nvar isDaytime = hour >= 7 && hour < 18;\nvar lightWarn = isDaytime && lightPct < 20;\nvar lightLabel = lightWarn ? 'LOW ⚠️' : (lightPct < 20 ? 'DARK 🌙' : 'BRIGHT ☀️');\nvar lightColour = lightWarn ? '#FF9800' : (lightPct < 20 ? '#607D8B' : '#FFC107');\n\n// Temp status\nvar tempColour = temp > 30 ? '#e63946' : temp < 18 ? '#2196F3' : '#4CAF50';\nvar tempLabel  = temp > 30 ? 'HIGH 🔴' : temp < 18 ? 'COLD 🔵' : 'NORMAL 🟢';\n\nreturn [\n  { payload: temp },\n  { payload: humi },\n  { payload: soilPct },\n  { payload: lightPct },\n  { payload: `<div style=\"text-align:center;margin-top:6px\"><span style=\"background:${soilColour};color:#fff;padding:4px 14px;border-radius:20px;font-weight:bold\">${soilLabel}</span><br><small style='color:#aaa'>Raw ADC: ${soilRaw}</small></div>` },\n  { payload: `<div style=\"text-align:center;margin-top:6px\"><span style=\"background:${lightColour};color:#fff;padding:4px 14px;border-radius:20px;font-weight:bold\">${lightLabel}</span></div>` },\n  { payload: `<div style=\"text-align:center;margin-top:6px\"><span style=\"background:${tempColour};color:#fff;padding:4px 14px;border-radius:20px;font-weight:bold\">${tempLabel}</span></div>` },\n  { payload: new Date().toLocaleString('en-MY') },\n  { payload: temp, topic: 'Temperature (°C)' },\n  { payload: humi, topic: 'Humidity (%)' },\n  { payload: soilPct, topic: 'Soil Moisture (%)' }\n];\n",
+        "outputs": 10,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 720,
+        "y": 40,
+        "wires": [
+            [
+                "gauge_temp"
+            ],
+            [
+                "gauge_humi"
+            ],
+            [
+                "gauge_soil"
+            ],
+            [
+                "gauge_light"
+            ],
+            [
+                "text_soil_status"
+            ],
+            [
+                "text_light_status"
+            ],
+            [
+                "text_temp_status"
+            ],
+            [
+                "text_last_updated"
+            ],
+            [
+                "chart_history"
+            ],
+            [
+                "chart_history"
+            ]
+        ]
+    },
+    {
+        "id": "fn_parse_actuators",
+        "type": "function",
+        "z": "tab_gh",
+        "name": "Parse Actuator Status",
+        "func": "var d = msg.payload;\nif (!d || typeof d !== 'object') return null;\n\nvar fanOn   = d.fan   && d.fan.state;\nvar pumpOn  = d.pump  && d.pump.state;\nvar lightOn = d.growLight && d.growLight.state;\n\nfunction badge(on, labelOn, labelOff) {\n  var colour = on ? '#4CAF50' : '#9E9E9E';\n  return `<span style=\"background:${colour};color:#fff;padding:3px 12px;border-radius:20px;font-weight:bold\">${on ? labelOn : labelOff}</span>`;\n}\n\nreturn [\n  { payload: badge(fanOn,   '● FAN ON',   '○ FAN OFF')   },\n  { payload: badge(pumpOn,  '● PUMP ON',  '○ PUMP OFF')  },\n  { payload: badge(lightOn, '● LIGHT ON', '○ LIGHT OFF') }\n];\n",
+        "outputs": 3,
+        "x": 720,
+        "y": 100,
+        "wires": [
+            [
+                "text_fan_status"
+            ],
+            [
+                "text_pump_status"
+            ],
+            [
+                "text_light_status_act"
+            ]
+        ]
+    },
+    {
+        "id": "fn_parse_alerts",
+        "type": "function",
+        "z": "tab_gh",
+        "name": "Parse Alert Log",
+        "func": "var d = msg.payload;\nif (!d || typeof d !== 'object') {\n  return { payload: '<p style=\"color:#aaa\">No alerts recorded.</p>' };\n}\n\nvar rows = Object.values(d).reverse().map(function(a) {\n  var colour = a.level === 'critical' ? '#e63946' : '#FF9800';\n  var icon   = a.level === 'critical' ? '🔴' : '⚠️';\n  var time   = a.timestamp ? new Date(a.timestamp).toLocaleString('en-MY') : '';\n  return `<div style=\"border-left:4px solid ${colour};padding:6px 10px;margin:4px 0;background:rgba(0,0,0,0.1)\">`\n    + `<strong>${icon} ${a.message}</strong><br><small style='color:#aaa'>${time}</small></div>`;\n}).join('');\n\nreturn { payload: rows };\n",
+        "outputs": 1,
+        "x": 720,
+        "y": 160,
+        "wires": [
+            [
+                "text_alert_log"
+            ]
+        ]
+    },
+    {
+        "id": "gauge_temp",
+        "type": "ui_gauge",
+        "z": "tab_gh",
+        "name": "Temperature",
+        "group": "grp_sensors",
+        "order": 1,
+        "width": "3",
+        "height": "3",
+        "gtype": "gage",
+        "title": "Temperature",
+        "label": "°C",
+        "format": "{{value | number:1}}",
+        "min": 0,
+        "max": 50,
+        "colors": [
+            "#2196F3",
+            "#4CAF50",
+            "#e63946"
+        ],
+        "seg1": 18,
+        "seg2": 30,
+        "x": 1000,
+        "y": 20,
+        "wires": []
+    },
+    {
+        "id": "gauge_humi",
+        "type": "ui_gauge",
+        "z": "tab_gh",
+        "name": "Humidity",
+        "group": "grp_sensors",
+        "order": 2,
+        "width": "3",
+        "height": "3",
+        "gtype": "gage",
+        "title": "Humidity",
+        "label": "%",
+        "format": "{{value | number:1}}",
+        "min": 0,
+        "max": 100,
+        "colors": [
+            "#e63946",
+            "#f4a261",
+            "#2a9d8f"
+        ],
+        "seg1": 30,
+        "seg2": 70,
+        "x": 1000,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "gauge_soil",
+        "type": "ui_gauge",
+        "z": "tab_gh",
+        "name": "Soil Moisture",
+        "group": "grp_sensors",
+        "order": 3,
+        "width": "3",
+        "height": "3",
+        "gtype": "gage",
+        "title": "Soil Moisture",
+        "label": "%",
+        "format": "{{value}}",
+        "min": 0,
+        "max": 100,
+        "colors": [
+            "#e63946",
+            "#f4a261",
+            "#2a9d8f"
+        ],
+        "seg1": 30,
+        "seg2": 80,
+        "x": 1000,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "gauge_light",
+        "type": "ui_gauge",
+        "z": "tab_gh",
+        "name": "Light Level",
+        "group": "grp_sensors",
+        "order": 4,
+        "width": "3",
+        "height": "3",
+        "gtype": "gage",
+        "title": "Light Level",
+        "label": "%",
+        "format": "{{value}}",
+        "min": 0,
+        "max": 100,
+        "colors": [
+            "#607D8B",
+            "#FF9800",
+            "#FFC107"
+        ],
+        "seg1": 20,
+        "seg2": 60,
+        "x": 1000,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "text_temp_status",
+        "type": "ui_text",
+        "z": "tab_gh",
+        "group": "grp_sensors",
+        "order": 5,
+        "width": "3",
+        "height": "1",
+        "name": "Temp Status",
+        "label": "Temp Status",
+        "format": "{{{msg.payload}}}",
+        "layout": "row-center",
+        "x": 1000,
+        "y": 180,
+        "wires": []
+    },
+    {
+        "id": "text_soil_status",
+        "type": "ui_text",
+        "z": "tab_gh",
+        "group": "grp_sensors",
+        "order": 6,
+        "width": "3",
+        "height": "1",
+        "name": "Soil Status",
+        "label": "Soil Status",
+        "format": "{{{msg.payload}}}",
+        "layout": "row-center",
+        "x": 1000,
+        "y": 220,
+        "wires": []
+    },
+    {
+        "id": "text_light_status",
+        "type": "ui_text",
+        "z": "tab_gh",
+        "group": "grp_sensors",
+        "order": 7,
+        "width": "3",
+        "height": "1",
+        "name": "Light Status",
+        "label": "Light Status",
+        "format": "{{{msg.payload}}}",
+        "layout": "row-center",
+        "x": 1000,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "text_last_updated",
+        "type": "ui_text",
+        "z": "tab_gh",
+        "group": "grp_sensors",
+        "order": 8,
+        "width": "3",
+        "height": "1",
+        "name": "Last Updated",
+        "label": "Last Updated",
+        "format": "{{msg.payload}}",
+        "layout": "row-spread",
+        "x": 1000,
+        "y": 300,
+        "wires": []
+    },
+    {
+        "id": "text_fan_status",
+        "type": "ui_text",
+        "z": "tab_gh",
+        "group": "grp_actuators",
+        "order": 1,
+        "width": "2",
+        "height": "1",
+        "name": "Fan Status",
+        "label": "Fan",
+        "format": "{{{msg.payload}}}",
+        "layout": "row-center",
+        "x": 1000,
+        "y": 340,
+        "wires": []
+    },
+    {
+        "id": "text_pump_status",
+        "type": "ui_text",
+        "z": "tab_gh",
+        "group": "grp_actuators",
+        "order": 2,
+        "width": "2",
+        "height": "1",
+        "name": "Pump Status",
+        "label": "Pump",
+        "format": "{{{msg.payload}}}",
+        "layout": "row-center",
+        "x": 1000,
+        "y": 380,
+        "wires": []
+    },
+    {
+        "id": "text_light_status_act",
+        "type": "ui_text",
+        "z": "tab_gh",
+        "group": "grp_actuators",
+        "order": 3,
+        "width": "2",
+        "height": "1",
+        "name": "Grow Light Status",
+        "label": "Grow Light",
+        "format": "{{{msg.payload}}}",
+        "layout": "row-center",
+        "x": 1010,
+        "y": 420,
+        "wires": []
+    },
+    {
+        "id": "btn_fan_on",
+        "type": "ui_button",
+        "z": "tab_gh",
+        "name": "Fan ON",
+        "group": "grp_actuators",
+        "order": 4,
+        "width": "2",
+        "height": "1",
+        "passthru": false,
+        "label": "Fan ON",
+        "tooltip": "Manually turn fan on",
+        "color": "white",
+        "bgcolor": "#4CAF50",
+        "icon": "power_settings_new",
+        "payload": "ON",
+        "payloadType": "str",
+        "topic": "fan",
+        "topicType": "str",
+        "x": 170,
+        "y": 460,
+        "wires": [
+            [
+                "fn_manual_control"
+            ]
+        ]
+    },
+    {
+        "id": "btn_fan_off",
+        "type": "ui_button",
+        "z": "tab_gh",
+        "name": "Fan OFF",
+        "group": "grp_actuators",
+        "order": 5,
+        "width": "2",
+        "height": "1",
+        "passthru": false,
+        "label": "Fan OFF",
+        "tooltip": "Manually turn fan off",
+        "color": "white",
+        "bgcolor": "#9E9E9E",
+        "icon": "power_settings_new",
+        "payload": "OFF",
+        "payloadType": "str",
+        "topic": "fan",
+        "topicType": "str",
+        "x": 170,
+        "y": 500,
+        "wires": [
+            [
+                "fn_manual_control"
+            ]
+        ]
+    },
+    {
+        "id": "btn_pump_on",
+        "type": "ui_button",
+        "z": "tab_gh",
+        "name": "Pump ON",
+        "group": "grp_actuators",
+        "order": 6,
+        "width": "2",
+        "height": "1",
+        "passthru": false,
+        "label": "Pump ON",
+        "tooltip": "Manually turn water pump on",
+        "color": "white",
+        "bgcolor": "#2196F3",
+        "payload": "ON",
+        "payloadType": "str",
+        "topic": "pump",
+        "topicType": "str",
+        "x": 170,
+        "y": 540,
+        "wires": [
+            [
+                "fn_manual_control"
+            ]
+        ]
+    },
+    {
+        "id": "btn_pump_off",
+        "type": "ui_button",
+        "z": "tab_gh",
+        "name": "Pump OFF",
+        "group": "grp_actuators",
+        "order": 7,
+        "width": "2",
+        "height": "1",
+        "passthru": false,
+        "label": "Pump OFF",
+        "tooltip": "Manually turn water pump off",
+        "color": "white",
+        "bgcolor": "#9E9E9E",
+        "payload": "OFF",
+        "payloadType": "str",
+        "topic": "pump",
+        "topicType": "str",
+        "x": 170,
+        "y": 580,
+        "wires": [
+            [
+                "fn_manual_control"
+            ]
+        ]
+    },
+    {
+        "id": "btn_light_on",
+        "type": "ui_button",
+        "z": "tab_gh",
+        "name": "Grow Light ON",
+        "group": "grp_actuators",
+        "order": 8,
+        "width": "2",
+        "height": "1",
+        "passthru": false,
+        "label": "Light ON",
+        "tooltip": "Manually turn grow light on",
+        "color": "white",
+        "bgcolor": "#FFC107",
+        "payload": "ON",
+        "payloadType": "str",
+        "topic": "growLight",
+        "topicType": "str",
+        "x": 180,
+        "y": 620,
+        "wires": [
+            [
+                "fn_manual_control"
+            ]
+        ]
+    },
+    {
+        "id": "btn_light_off",
+        "type": "ui_button",
+        "z": "tab_gh",
+        "name": "Grow Light OFF",
+        "group": "grp_actuators",
+        "order": 9,
+        "width": "2",
+        "height": "1",
+        "passthru": false,
+        "label": "Light OFF",
+        "tooltip": "Manually turn grow light off",
+        "color": "white",
+        "bgcolor": "#9E9E9E",
+        "payload": "OFF",
+        "payloadType": "str",
+        "topic": "growLight",
+        "topicType": "str",
+        "x": 180,
+        "y": 660,
+        "wires": [
+            [
+                "fn_manual_control"
+            ]
+        ]
+    },
+    {
+        "id": "fn_manual_control",
+        "type": "function",
+        "z": "tab_gh",
+        "name": "Manual Override → Firebase + MQTT",
+        "func": "// Write manual override to Firebase /actuators/status\nvar device  = msg.topic;   // 'fan' | 'pump' | 'growLight'\nvar state   = msg.payload === 'ON';\n\n// Build Firebase PATCH URL for just this device\nmsg.url     = 'https://iot-greenhouse-assignment-default-rtdb.firebaseio.com/actuators/status/' + device + '.json?auth=s85BRUupLYDqKHsYofadrGpOVpy5KfffYXk6nvNV';\nmsg.method  = 'PATCH';\nmsg.headers = { 'Content-Type': 'application/json' };\nmsg.payload = JSON.stringify({ state: state, manual: true, updated: new Date().toISOString() });\n\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 430,
+        "y": 560,
+        "wires": [
+            [
+                "http_patch_actuator"
+            ]
+        ]
+    },
+    {
+        "id": "http_patch_actuator",
+        "type": "http request",
+        "z": "tab_gh",
+        "name": "PATCH actuator to Firebase",
+        "method": "use",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 700,
+        "y": 560,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "slider_temp_on",
+        "type": "ui_slider",
+        "z": "tab_gh",
+        "name": "Fan ON threshold",
+        "label": "Fan ON Temp (°C)",
+        "tooltip": "Fan activates above this temperature",
+        "group": "grp_thresholds",
+        "order": 1,
+        "width": "6",
+        "height": "1",
+        "passthru": false,
+        "outs": "end",
+        "topic": "temp_fan_on",
+        "topicType": "str",
+        "min": 20,
+        "max": 45,
+        "step": 1,
+        "x": 180,
+        "y": 720,
+        "wires": [
+            [
+                "fn_save_threshold"
+            ]
+        ]
+    },
+    {
+        "id": "slider_temp_off",
+        "type": "ui_slider",
+        "z": "tab_gh",
+        "name": "Fan OFF threshold",
+        "label": "Fan OFF Temp (°C)",
+        "tooltip": "Fan turns off below this temperature",
+        "group": "grp_thresholds",
+        "order": 2,
+        "width": "6",
+        "height": "1",
+        "passthru": false,
+        "outs": "end",
+        "topic": "temp_fan_off",
+        "topicType": "str",
+        "min": 10,
+        "max": 25,
+        "step": 1,
+        "x": 180,
+        "y": 760,
+        "wires": [
+            [
+                "fn_save_threshold"
+            ]
+        ]
+    },
+    {
+        "id": "slider_soil_on",
+        "type": "ui_slider",
+        "z": "tab_gh",
+        "name": "Pump ON threshold",
+        "label": "Pump ON Soil (%)",
+        "tooltip": "Pump activates when soil drops below this",
+        "group": "grp_thresholds",
+        "order": 3,
+        "width": "6",
+        "height": "1",
+        "passthru": false,
+        "outs": "end",
+        "topic": "soil_pump_on",
+        "topicType": "str",
+        "min": 10,
+        "max": 50,
+        "step": 5,
+        "x": 180,
+        "y": 800,
+        "wires": [
+            [
+                "fn_save_threshold"
+            ]
+        ]
+    },
+    {
+        "id": "slider_soil_off",
+        "type": "ui_slider",
+        "z": "tab_gh",
+        "name": "Pump OFF threshold",
+        "label": "Pump OFF Soil (%)",
+        "tooltip": "Pump stops when soil exceeds this",
+        "group": "grp_thresholds",
+        "order": 4,
+        "width": "6",
+        "height": "1",
+        "passthru": false,
+        "outs": "end",
+        "topic": "soil_pump_off",
+        "topicType": "str",
+        "min": 50,
+        "max": 95,
+        "step": 5,
+        "x": 180,
+        "y": 840,
+        "wires": [
+            [
+                "fn_save_threshold"
+            ]
+        ]
+    },
+    {
+        "id": "fn_save_threshold",
+        "type": "function",
+        "z": "tab_gh",
+        "name": "Save Threshold → Firebase /thresholds",
+        "func": "var key = msg.topic;\nvar val = parseInt(msg.payload);\n\nmsg.url     = 'https://iot-greenhouse-assignment-default-rtdb.firebaseio.com/thresholds.json?auth=s85BRUupLYDqKHsYofadrGpOVpy5KfffYXk6nvNV';\nmsg.method  = 'PATCH';\nmsg.headers = { 'Content-Type': 'application/json' };\nmsg.payload = JSON.stringify({ [key]: val });\n\nnode.status({ fill:'green', shape:'dot', text: key + ' → ' + val });\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 450,
+        "y": 780,
+        "wires": [
+            [
+                "http_patch_threshold"
+            ]
+        ]
+    },
+    {
+        "id": "http_patch_threshold",
+        "type": "http request",
+        "z": "tab_gh",
+        "name": "PATCH threshold to Firebase",
+        "method": "use",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 710,
+        "y": 780,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "chart_history",
+        "type": "ui_chart",
+        "z": "tab_gh",
+        "name": "Sensor History",
+        "group": "grp_chart",
+        "order": 1,
+        "width": "12",
+        "height": "6",
+        "label": "Sensor Readings Over Time",
+        "chartType": "line",
+        "legend": "true",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "Waiting for data...",
+        "dot": false,
+        "ymin": "0",
+        "ymax": "100",
+        "removeOlder": 1,
+        "removeOlderPoints": "60",
+        "removeOlderUnit": "3600",
+        "colors": [
+            "#e63946",
+            "#2a9d8f",
+            "#f4a261",
+            "#a8dadc"
+        ],
+        "outputs": 1,
+        "x": 1010,
+        "y": 880,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "text_alert_log",
+        "type": "ui_text",
+        "z": "tab_gh",
+        "group": "grp_alerts",
+        "order": 1,
+        "width": "12",
+        "height": "4",
+        "name": "Alert Log",
+        "label": "",
+        "format": "{{{msg.payload}}}",
+        "layout": "col-center",
+        "x": 1000,
+        "y": 160,
+        "wires": []
+    },
+    {
+        "id": "toast_alert",
+        "type": "ui_toast",
+        "z": "tab_gh",
+        "position": "top right",
+        "displayTime": "6",
+        "highlight": "#e63946",
+        "sendall": true,
+        "outputs": 0,
+        "ok": "Dismiss",
+        "cancel": "",
+        "raw": false,
+        "name": "Alert Toast",
+        "x": 1000,
+        "y": 920,
+        "wires": []
+    },
+    {
+        "id": "inject_alert_watcher",
+        "type": "inject",
+        "z": "tab_gh",
+        "name": "Watch for new alerts every 10s",
+        "repeat": "10",
+        "once": true,
+        "onceDelay": 2,
+        "payload": "",
+        "payloadType": "date",
+        "x": 160,
+        "y": 920,
+        "wires": [
+            [
+                "http_get_latest_alert"
+            ]
+        ]
+    },
+    {
+        "id": "http_get_latest_alert",
+        "type": "http request",
+        "z": "tab_gh",
+        "name": "GET latest alert",
+        "method": "GET",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "https://iot-greenhouse-assignment-default-rtdb.firebaseio.com/alerts.json?auth=YOUR_DB_SECRET&orderBy=\"$key\"&limitToLast=1",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 420,
+        "y": 920,
+        "wires": [
+            [
+                "fn_check_new_alert"
+            ]
+        ]
+    },
+    {
+        "id": "fn_check_new_alert",
+        "type": "function",
+        "z": "tab_gh",
+        "name": "Toast if new alert",
+        "func": "var d = msg.payload;\nif (!d || typeof d !== 'object') return null;\n\nvar entries = Object.values(d);\nif (entries.length === 0) return null;\n\nvar latest = entries[entries.length - 1];\nvar lastKey = Object.keys(d).pop();\n\n// Only toast if we haven't seen this key before\nvar seen = context.get('lastAlertKey') || '';\nif (lastKey === seen) return null;\ncontext.set('lastAlertKey', lastKey);\n\nvar icon = latest.level === 'critical' ? '🔴 CRITICAL' : '⚠️ WARNING';\nreturn { payload: icon + ': ' + latest.message };\n",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 680,
+        "y": 920,
+        "wires": [
+            [
+                "toast_alert"
+            ]
+        ]
+    },
+    {
+        "id": "grp_sensors",
+        "type": "ui_group",
+        "name": "📡 Real-Time Sensor Readings",
+        "tab": "ui_tab_gh",
+        "order": 1,
+        "disp": true,
+        "width": "12",
+        "collapse": false
+    },
+    {
+        "id": "grp_actuators",
+        "type": "ui_group",
+        "name": "⚙️ Actuator Status & Manual Control",
+        "tab": "ui_tab_gh",
+        "order": 2,
+        "disp": true,
+        "width": "12",
+        "collapse": false
+    },
+    {
+        "id": "grp_thresholds",
+        "type": "ui_group",
+        "name": "🔧 Threshold Configuration",
+        "tab": "ui_tab_gh",
+        "order": 3,
+        "disp": true,
+        "width": "12",
+        "collapse": false
+    },
+    {
+        "id": "grp_chart",
+        "type": "ui_group",
+        "name": "📈 Historical Data Chart",
+        "tab": "ui_tab_gh",
+        "order": 4,
+        "disp": true,
+        "width": "12",
+        "collapse": false
+    },
+    {
+        "id": "grp_alerts",
+        "type": "ui_group",
+        "name": "🔔 Alert Log",
+        "tab": "ui_tab_gh",
+        "order": 5,
+        "disp": true,
+        "width": "12",
+        "collapse": false
+    },
+    {
+        "id": "ui_tab_gh",
+        "type": "ui_tab",
+        "name": "🌱 Smart Greenhouse",
+        "icon": "eco",
+        "order": 1,
+        "disabled": false,
+        "hidden": false
+    },
+    {
+        "id": "fed270e2b1d9e3dd",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-dashboard": "3.6.6"
+        }
+    }
+]
