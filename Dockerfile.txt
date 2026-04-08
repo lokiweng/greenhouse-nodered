@@ -6,22 +6,17 @@ USER root
 WORKDIR /usr/src/node-red
 RUN npm install node-red-dashboard
 
-# The [ "src", "dest" ] format is specifically for handling spaces
-COPY ["current version flows.json", "/data/current version flows.json"]
+# Copy the file AND rename it to flows.json inside the container
+# This permanently fixes the "spaces in filename" error
+COPY ["current version flows.json", "/data/flows.json"]
 
-# Ensure permissions are correct for the node-red user
 RUN chown -R node-red:node-red /data
 
 USER node-red
 
-# Use quotes for the environment variable to handle the spaces
-ENV FLOWS="current version flows.json"
+# Tell Node-RED to load the renamed file
+ENV FLOWS=flows.json
 
-# Redirect the root page to the dashboard UI automatically
-ENV NODE_OPTIONS="--max-old-space-size=512"
-
-
-RUN sed -i 's/\/\/httpRoot: \x27\/\x27,/httpRoot: \x27\/\x27,/' /usr/src/node-red/node_modules/node-red/settings.js \
-    && sed -i 's/ui: { path: "ui" }/ui: { path: "" }/' /usr/src/node-red/node_modules/node-red-dashboard/index.js || true
-
+# Tell Railway exactly which port to use
+ENV PORT=1880
 EXPOSE 1880
