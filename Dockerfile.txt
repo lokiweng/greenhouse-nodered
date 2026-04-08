@@ -1,4 +1,21 @@
 FROM nodered/node-red:latest
+
+USER root
+
+
+WORKDIR /usr/src/node-red
 RUN npm install node-red-dashboard
+
+
 COPY flows.json /data/flows.json
+
+
+RUN chown -R node-red:node-red /data
+
+
+USER node-red
+
+
+ENV FLOWS=flows.json
+
 EXPOSE 1880
