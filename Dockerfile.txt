@@ -6,15 +6,15 @@ USER root
 WORKDIR /usr/src/node-red
 RUN npm install node-red-dashboard
 
-# Use quotes for paths with spaces
-COPY "current version flows.json" "/data/current version flows.json"
+# The [ "src", "dest" ] format is specifically for handling spaces
+COPY ["current version flows.json", "/data/current version flows.json"]
 
-# Fix permissions
+# Ensure permissions are correct for the node-red user
 RUN chown -R node-red:node-red /data
 
 USER node-red
 
-# Use quotes for the environment variable value
+# Use quotes for the environment variable to handle the spaces
 ENV FLOWS="current version flows.json"
 
 EXPOSE 1880
