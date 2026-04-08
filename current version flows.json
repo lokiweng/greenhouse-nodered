@@ -279,6 +279,7 @@
         "crontab": "",
         "once": true,
         "onceDelay": 0.5,
+        "topic": "",
         "payload": "",
         "payloadType": "date",
         "x": 150,
@@ -1025,13 +1026,23 @@
         "removeOlder": 1,
         "removeOlderPoints": "60",
         "removeOlderUnit": "3600",
+        "cutout": "",
+        "useOneColor": false,
+        "useUTC": false,
         "colors": [
             "#e63946",
             "#2a9d8f",
             "#f4a261",
-            "#a8dadc"
+            "#a8dadc",
+            "#000000",
+            "#000000",
+            "#000000",
+            "#000000",
+            "#000000"
         ],
         "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
         "x": 1010,
         "y": 880,
         "wires": [
@@ -1050,7 +1061,7 @@
         "label": "",
         "format": "{{{msg.payload}}}",
         "layout": "col-center",
-        "x": 1000,
+        "x": 1140,
         "y": 160,
         "wires": []
     },
@@ -1167,6 +1178,11 @@
         "name": "Validate & normalise sensor data",
         "func": "var d = msg.payload;\nif (!d || typeof d !== 'object') {\n  node.warn('Invalid sensor payload: ' + JSON.stringify(d));\n  return null;\n}\n\n// Accept both raw ADC and pre-converted % values from ESP32\nvar temp     = parseFloat(d.temperature);\nvar humi     = parseFloat(d.humidity);\nvar soilRaw  = parseInt(d.soil_raw)   || 0;\nvar soilPct  = parseInt(d.soil_pct)   || Math.round((1 - soilRaw / 4095) * 100);\nvar lightRaw = parseInt(d.light_raw)  || 0;\nvar lightPct = parseInt(d.light_pct)  || Math.round(lightRaw / 4095 * 100);\n\nif (isNaN(temp) || isNaN(humi)) {\n  node.warn('Missing temp/humi in payload');\n  return null;\n}\n\nmsg.payload = {\n  temperature: parseFloat(temp.toFixed(1)),\n  humidity:    parseFloat(humi.toFixed(1)),\n  soil_raw:    soilRaw,\n  soil_pct:    soilPct,\n  light_raw:   lightRaw,\n  light_pct:   lightPct,\n  timestamp:   new Date().toISOString()\n};\nnode.status({ fill:'green', shape:'dot',\n  text: 'T:' + temp.toFixed(1) + '°C H:' + humi.toFixed(1) + '%' });\nreturn msg;\n",
         "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
         "x": 440,
         "y": 80,
         "wires": [
@@ -1183,6 +1199,11 @@
         "name": "Build PUT /sensors/current",
         "func": "var secret = env.get('FIREBASE_SECRET');\nmsg.url     = 'https://iot-greenhouse-assignment-default-rtdb.firebaseio.com/sensors/current.json?auth=' + secret;\nmsg.method  = 'PUT';\nmsg.headers = { 'Content-Type': 'application/json' };\nmsg.payload = JSON.stringify(msg.payload);\nreturn msg;\n",
         "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
         "x": 700,
         "y": 60,
         "wires": [
@@ -1218,8 +1239,13 @@
         "type": "function",
         "z": "tab_mqtt",
         "name": "Check thresholds → generate alert",
-        "func": "var d   = msg.payload;\nvar thr = flow.get('thresholds') || {\n  temp_fan_on: 30, temp_fan_off: 25,\n  soil_pump_on: 30, soil_pump_off: 70\n};\n\nvar alerts = [];\n\nif (d.temperature > thr.temp_fan_on + 5)\n  alerts.push({ level:'critical', message:'Temperature critically high: ' + d.temperature + '°C' });\nelse if (d.temperature > thr.temp_fan_on)\n  alerts.push({ level:'warning',  message:'Temperature high: ' + d.temperature + '°C' });\n\nif (d.humidity > 85)\n  alerts.push({ level:'warning',  message:'Humidity very high: ' + d.humidity + '%' });\n\nif (d.soil_pct < thr.soil_pump_on - 10)\n  alerts.push({ level:'critical', message:'Soil critically dry: ' + d.soil_pct + '%' });\nelse if (d.soil_pct < thr.soil_pump_on)\n  alerts.push({ level:'warning',  message:'Soil moisture low: ' + d.soil_pct + '%' });\n\nif (alerts.length === 0) return null;\n\nvar ts = Date.now();\nalerts.forEach(function(a, i) { a.timestamp = new Date(ts + i).toISOString(); });\nmsg.alerts = alerts;\nreturn msg;\n",
+        "func": "var d   = msg.payload;\nvar thr = flow.get('thresholds') || {\n  temp_fan_on: 30, temp_fan_off: 25,\n  soil_pump_on: 30, soil_pump_off: 70\n};\n\nvar alerts = [];\n\nif (d.temperature > thr.temp_fan_on + 5)\n  alerts.push({ level:'critical', message:'Temperature critically high: ' + d.temperature + '°C' });\nelse if (d.temperature > thr.temp_fan_on)\n  alerts.push({ level:'warning',  message:'Temperature high: ' + d.temperature + '°C' });\n\nif (d.humidity > 85)\n  alerts.push({ level:'warning',  message:'Humidity very high: ' + d.humidity + '%' });\n\nif (d.soil_pct < thr.soil_pump_on - 10)\n  alerts.push({ level:'critical', message:'Soil critically dry: ' + d.soil_pct + '%' });\nelse if (d.soil_pct < thr.soil_pump_on)\n  alerts.push({ level:'warning',  message:'Soil moisture low: ' + d.soil_pct + '%' });\n\nif (alerts.length === 0) return null;\n\nvar ts = Date.now();\nalerts.forEach(function(a, i) { \n    // Use toLocaleString to respect the local timezone instead of forcing UTC\n    a.timestamp = new Date(ts + i).toLocaleString(\"en-MY\", { timeZone: \"Asia/Kuala_Lumpur\" }); \n});\nmsg.alerts = alerts;\nreturn msg;\n",
         "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
         "x": 700,
         "y": 120,
         "wires": [
@@ -1233,9 +1259,14 @@
         "type": "function",
         "z": "tab_mqtt",
         "name": "Build POST /alerts (one per alert)",
-        "func": "var secret = env.get('FIREBASE_SECRET');\nvar base = 'https://iot-greenhouse-assignment-default-rtdb.firebaseio.com/alerts.json?auth=' + secret;\nvar msgs = [];\nmsg.alerts.forEach(function(a) {\n  msgs.push({\n    url: base,\n    method: 'POST',\n    headers: { 'Content-Type': 'application/json' },\n    payload: JSON.stringify(a)\n  });\n});\n// Send each alert as a separate message\nreturn msgs.map(function(m) { return { payload: m.payload, url: m.url, method: m.method, headers: m.headers }; });\n",
+        "func": "var secret = env.get('FIREBASE_SECRET');\nvar base = 'https://iot-greenhouse-assignment-default-rtdb.firebaseio.com/alerts.json?auth=s85BRUupLYDqKHsYofadrGpOVpy5KfffYXk6nvNV' + secret;\nvar msgs = [];\nmsg.alerts.forEach(function(a) {\n  msgs.push({\n    url: base,\n    method: 'POST',\n    headers: { 'Content-Type': 'application/json' },\n    payload: JSON.stringify(a)\n  });\n});\n// Send each alert as a separate message\nreturn msgs.map(function(m) { return { payload: m.payload, url: m.url, method: m.method, headers: m.headers }; });\n",
         "outputs": 1,
-        "x": 960,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1020,
         "y": 120,
         "wires": [
             [
@@ -1448,10 +1479,20 @@
         "type": "inject",
         "z": "tab_mqtt",
         "name": "Load thresholds from Firebase on start",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
         "repeat": "",
         "crontab": "",
         "once": true,
         "onceDelay": 1,
+        "topic": "",
         "payload": "",
         "payloadType": "date",
         "x": 180,
@@ -1500,7 +1541,7 @@
         ]
     },
     {
-        "id": "e1b9b44a1a92467d",
+        "id": "0f709a0daa9729ac",
         "type": "global-config",
         "env": [],
         "modules": {
