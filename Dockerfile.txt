@@ -2,20 +2,19 @@ FROM nodered/node-red:latest
 
 USER root
 
-
+# Install the dashboard nodes
 WORKDIR /usr/src/node-red
 RUN npm install node-red-dashboard
 
+# Use quotes for paths with spaces
+COPY "current version flows.json" "/data/current version flows.json"
 
-COPY current version flows.json /data/current version flows.json
-
-
+# Fix permissions
 RUN chown -R node-red:node-red /data
-
 
 USER node-red
 
-
-ENV FLOWS=current version flows.json
+# Use quotes for the environment variable value
+ENV FLOWS="current version flows.json"
 
 EXPOSE 1880
