@@ -17,4 +17,11 @@ USER node-red
 # Use quotes for the environment variable to handle the spaces
 ENV FLOWS="current version flows.json"
 
+# Redirect the root page to the dashboard UI automatically
+ENV NODE_OPTIONS="--max-old-space-size=512"
+
+
+RUN sed -i 's/\/\/httpRoot: \x27\/\x27,/httpRoot: \x27\/\x27,/' /usr/src/node-red/node_modules/node-red/settings.js \
+    && sed -i 's/ui: { path: "ui" }/ui: { path: "" }/' /usr/src/node-red/node_modules/node-red-dashboard/index.js || true
+
 EXPOSE 1880
