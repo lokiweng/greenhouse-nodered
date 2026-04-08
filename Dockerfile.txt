@@ -7,7 +7,7 @@ WORKDIR /usr/src/node-red
 RUN npm install node-red-dashboard
 
 
-COPY flows.json /data/flows.json
+COPY current version flows.json /data/current version flows.json
 
 
 RUN chown -R node-red:node-red /data
@@ -16,6 +16,6 @@ RUN chown -R node-red:node-red /data
 USER node-red
 
 
-ENV FLOWS=flows.json
+ENV FLOWS=current version flows.json
 
 EXPOSE 1880
