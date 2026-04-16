@@ -766,9 +766,12 @@
         "width": "2",
         "height": "1",
         "passthru": false,
-        "label": "Light ON",
+        "label": "Light OFF",
+        "tooltip": "",
         "color": "white",
         "bgcolor": "#FFC107",
+        "className": "",
+        "icon": "",
         "payload": "ON",
         "payloadType": "str",
         "topic": "growLight",
@@ -791,9 +794,12 @@
         "width": "2",
         "height": "1",
         "passthru": false,
-        "label": "Light OFF",
+        "label": "Light ON",
+        "tooltip": "",
         "color": "white",
         "bgcolor": "#9E9E9E",
+        "className": "",
+        "icon": "",
         "payload": "OFF",
         "payloadType": "str",
         "topic": "growLight",
@@ -1157,8 +1163,8 @@
         "qos": "1",
         "retain": "false",
         "broker": "mqtt_broker_cfg",
-        "x": 710,
-        "y": 900,
+        "x": 720,
+        "y": 860,
         "wires": []
     },
     {
@@ -1582,7 +1588,7 @@
         "wires": []
     },
     {
-        "id": "8899832277c780bd",
+        "id": "8d2f6925d299d8c5",
         "type": "global-config",
         "env": [],
         "modules": {
