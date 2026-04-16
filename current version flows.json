@@ -1596,7 +1596,7 @@
         "topic": "bmit2123_assg/greenhouse/commands",
         "qos": "2",
         "datatype": "auto-detect",
-        "broker": "",
+        "broker": "mqtt_broker_cfg",
         "nl": false,
         "rap": true,
         "rh": 0,
@@ -1667,7 +1667,7 @@
         "wires": []
     },
     {
-        "id": "334bc9534827e9d3",
+        "id": "aab08f4bb0fac75e",
         "type": "global-config",
         "env": [],
         "modules": {
