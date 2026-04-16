@@ -1,13 +1,13 @@
 [
     {
-        "id": "b88969bc45616ab9",
+        "id": "b7b706b0b92dc342",
         "type": "tab",
         "label": "Smart Greenhouse",
         "disabled": false,
         "info": ""
     },
     {
-        "id": "ec7345c8ed81b0ca",
+        "id": "0280717f5b143c5b",
         "type": "tab",
         "label": "MQTT → Firebase Writer",
         "disabled": false,
@@ -266,9 +266,9 @@
         "willPayload": ""
     },
     {
-        "id": "4ffc259802475c93",
+        "id": "03a077c16fa9ecd2",
         "type": "inject",
-        "z": "b88969bc45616ab9",
+        "z": "b7b706b0b92dc342",
         "name": "Poll Firebase every 5s",
         "repeat": "5",
         "once": true,
@@ -279,16 +279,16 @@
         "y": 60,
         "wires": [
             [
-                "c704da99a2be999f",
-                "f19381aa6b533cb7",
-                "feec6eee3d7ccfc9"
+                "70215a61e767111f",
+                "75b46e8de2b3cdbd",
+                "a0e33655b9788adc"
             ]
         ]
     },
     {
-        "id": "c704da99a2be999f",
+        "id": "70215a61e767111f",
         "type": "http request",
-        "z": "b88969bc45616ab9",
+        "z": "b7b706b0b92dc342",
         "name": "GET /sensors/current",
         "method": "GET",
         "ret": "obj",
@@ -305,14 +305,14 @@
         "y": 40,
         "wires": [
             [
-                "fe1bd4aae1afcc1f"
+                "0a04f86ae569c10f"
             ]
         ]
     },
     {
-        "id": "f19381aa6b533cb7",
+        "id": "75b46e8de2b3cdbd",
         "type": "http request",
-        "z": "b88969bc45616ab9",
+        "z": "b7b706b0b92dc342",
         "name": "GET /actuators/status",
         "method": "GET",
         "ret": "obj",
@@ -329,14 +329,14 @@
         "y": 100,
         "wires": [
             [
-                "a9ed0f558fcf05c0"
+                "a40836c6ded6a229"
             ]
         ]
     },
     {
-        "id": "feec6eee3d7ccfc9",
+        "id": "a0e33655b9788adc",
         "type": "http request",
-        "z": "b88969bc45616ab9",
+        "z": "b7b706b0b92dc342",
         "name": "GET /alerts",
         "method": "GET",
         "ret": "obj",
@@ -353,14 +353,14 @@
         "y": 160,
         "wires": [
             [
-                "e5220bd459657683"
+                "ae410335b3a2d2dd"
             ]
         ]
     },
     {
-        "id": "fe1bd4aae1afcc1f",
+        "id": "0a04f86ae569c10f",
         "type": "function",
-        "z": "b88969bc45616ab9",
+        "z": "b7b706b0b92dc342",
         "name": "Parse Sensor Data",
         "func": "var d = msg.payload;\nif (!d || typeof d !== 'object') { node.warn('No sensor data'); return null; }\n\nfunction safeInt(v)   { var n = parseInt(v);   return isNaN(n) ? null : n; }\nfunction safeFloat(v) { var n = parseFloat(v); return isNaN(n) ? null : n; }\n\nvar temp = safeFloat(d.temperature) !== null ? safeFloat(d.temperature) : 0;\nvar humi = safeFloat(d.humidity)    !== null ? safeFloat(d.humidity)    : 0;\n\nvar soilPct = (function() {\n  var candidates = [d.soil_pct, d.soil_moisture, d.soil, d.soilMoisture];\n  for (var i = 0; i < candidates.length; i++) {\n    var v = safeInt(candidates[i]);\n    if (v !== null) return v;\n  }\n  return 0;\n})();\n\nvar lightPct = (function() {\n  var candidates = [d.light_pct, d.light_level, d.light];\n  for (var i = 0; i < candidates.length; i++) {\n    var v = safeInt(candidates[i]);\n    if (v !== null) return v;\n  }\n  return 0;\n})();\n\nvar soilLabel  = soilPct < 30 ? 'DRY' : soilPct > 80 ? 'WET SATURATED' : 'GOOD';\nvar soilColour = soilPct < 30 ? '#e63946' : soilPct > 80 ? '#2196F3' : '#4CAF50';\n\nvar hour = new Date().getHours();\nvar isDaytime = hour >= 7 && hour < 18;\nvar lightWarn = isDaytime && lightPct < 20;\nvar lightLabel = lightWarn ? 'LOW' : (lightPct < 20 ? 'DARK' : 'BRIGHT');\nvar lightColour = lightWarn ? '#FF9800' : (lightPct < 20 ? '#607D8B' : '#FFC107');\n\nvar tempColour = temp > 30 ? '#e63946' : temp < 18 ? '#2196F3' : '#4CAF50';\nvar tempLabel  = temp > 30 ? 'HIGH' : temp < 18 ? 'COLD' : 'NORMAL';\n\nreturn [\n  { payload: temp },\n  { payload: humi },\n  { payload: soilPct },\n  { payload: lightPct },\n  { payload: '<div style=\"text-align:center;margin-top:6px\"><span style=\"background:' + soilColour + ';color:#fff;padding:4px 14px;border-radius:20px;font-weight:bold\">' + soilLabel + ' (' + soilPct + '%)</span></div>' },\n  { payload: '<div style=\"text-align:center;margin-top:6px\"><span style=\"background:' + lightColour + ';color:#fff;padding:4px 14px;border-radius:20px;font-weight:bold\">' + lightLabel + ' (' + lightPct + '%)</span></div>' },\n  { payload: '<div style=\"text-align:center;margin-top:6px\"><span style=\"background:' + tempColour + ';color:#fff;padding:4px 14px;border-radius:20px;font-weight:bold\">' + tempLabel + ' (' + temp + 'C)</span></div>' },\n  { payload: new Date().toLocaleString('en-MY') },\n  { payload: temp,    topic: 'Temperature (C)' },\n  { payload: humi,    topic: 'Humidity (%)' },\n  { payload: soilPct, topic: 'Soil Moisture (%)' }\n];\n",
         "outputs": 11,
@@ -368,44 +368,44 @@
         "y": 40,
         "wires": [
             [
-                "16e24f2dae6a0a47"
+                "2d9343f6b994a88b"
             ],
             [
-                "ed513b94fe26358f"
+                "6a6878a639bc90ba"
             ],
             [
-                "015ddcb2566bbe21"
+                "508a46a7c14e1575"
             ],
             [
-                "7e207be43ec59f36"
+                "50931e539dbe391c"
             ],
             [
-                "d068edc443fddb76"
+                "cf205e9341230482"
             ],
             [
-                "014ec1900479c547"
+                "b6d480caa24e94c3"
             ],
             [
-                "108468c280f2a6e1"
+                "afe6d68699996cda"
             ],
             [
-                "44c895770b62c4a6"
+                "163e7511c4e05086"
             ],
             [
-                "59ccf311a74b07b8"
+                "74671c6e0fd9a8bd"
             ],
             [
-                "59ccf311a74b07b8"
+                "74671c6e0fd9a8bd"
             ],
             [
-                "59ccf311a74b07b8"
+                "74671c6e0fd9a8bd"
             ]
         ]
     },
     {
-        "id": "a9ed0f558fcf05c0",
+        "id": "a40836c6ded6a229",
         "type": "function",
-        "z": "b88969bc45616ab9",
+        "z": "b7b706b0b92dc342",
         "name": "Parse Actuator Status",
         "func": "var d=msg.payload;\nif(!d||typeof d!=='object')return null;\nvar fanOn=d.fan&&d.fan.state;\nvar pumpOn=d.pump&&d.pump.state;\nvar lightOn=d.growLight&&d.growLight.state;\nfunction badge(on,a,b){var c=on?'#4CAF50':'#9E9E9E';return '<span style=\"background:'+c+';color:#fff;padding:3px 12px;border-radius:20px;font-weight:bold\">'+(on?a:b)+'</span>';}\nreturn [{payload:badge(fanOn,'FAN ON','FAN OFF')},{payload:badge(pumpOn,'PUMP ON','PUMP OFF')},{payload:badge(lightOn,'LIGHT ON','LIGHT OFF')}];\n",
         "outputs": 3,
@@ -413,20 +413,20 @@
         "y": 100,
         "wires": [
             [
-                "791d4059bf241e49"
+                "75ac875090d01e52"
             ],
             [
-                "59aab9becee73551"
+                "6f79cce6949e0060"
             ],
             [
-                "0b8ca4ca01d927ba"
+                "51d97c046f7ab21a"
             ]
         ]
     },
     {
-        "id": "e5220bd459657683",
+        "id": "ae410335b3a2d2dd",
         "type": "function",
-        "z": "b88969bc45616ab9",
+        "z": "b7b706b0b92dc342",
         "name": "Parse Alert Log",
         "func": "var d=msg.payload;\nif(!d||typeof d!=='object'){return{payload:'<p>No alerts.</p>'};}\nvar rows=Object.values(d).reverse().map(function(a){var c=a.level==='critical'?'#e63946':'#FF9800';return '<div style=\"border-left:4px solid '+c+';padding:6px 10px;margin:4px 0\"><strong>'+a.message+'</strong></div>';}).join('');\nreturn{payload:rows};\n",
         "outputs": 1,
@@ -434,14 +434,14 @@
         "y": 160,
         "wires": [
             [
-                "a20e12297aeeadee"
+                "2fa22477133e23ab"
             ]
         ]
     },
     {
-        "id": "16e24f2dae6a0a47",
+        "id": "2d9343f6b994a88b",
         "type": "ui_gauge",
-        "z": "b88969bc45616ab9",
+        "z": "b7b706b0b92dc342",
         "name": "Temperature",
         "group": "grp_sensors",
         "order": 1,
@@ -465,9 +465,9 @@
         "wires": []
     },
     {
-        "id": "ed513b94fe26358f",
+        "id": "6a6878a639bc90ba",
         "type": "ui_gauge",
-        "z": "b88969bc45616ab9",
+        "z": "b7b706b0b92dc342",
         "name": "Humidity",
         "group": "grp_sensors",
         "order": 2,
@@ -491,9 +491,9 @@
         "wires": []
     },
     {
-        "id": "015ddcb2566bbe21",
+        "id": "508a46a7c14e1575",
         "type": "ui_gauge",
-        "z": "b88969bc45616ab9",
+        "z": "b7b706b0b92dc342",
         "name": "Soil Moisture",
         "group": "grp_sensors",
         "order": 3,
@@ -517,9 +517,9 @@
         "wires": []
     },
     {
-        "id": "7e207be43ec59f36",
+        "id": "50931e539dbe391c",
         "type": "ui_gauge",
-        "z": "b88969bc45616ab9",
+        "z": "b7b706b0b92dc342",
         "name": "Light Level",
         "group": "grp_sensors",
         "order": 4,
@@ -543,9 +543,9 @@
         "wires": []
     },
     {
-        "id": "108468c280f2a6e1",
+        "id": "afe6d68699996cda",
         "type": "ui_text",
-        "z": "b88969bc45616ab9",
+        "z": "b7b706b0b92dc342",
         "group": "grp_sensors",
         "order": 5,
         "width": "3",
@@ -559,9 +559,9 @@
         "wires": []
     },
     {
-        "id": "d068edc443fddb76",
+        "id": "cf205e9341230482",
         "type": "ui_text",
-        "z": "b88969bc45616ab9",
+        "z": "b7b706b0b92dc342",
         "group": "grp_sensors",
         "order": 6,
         "width": "3",
@@ -575,9 +575,9 @@
         "wires": []
     },
     {
-        "id": "014ec1900479c547",
+        "id": "b6d480caa24e94c3",
         "type": "ui_text",
-        "z": "b88969bc45616ab9",
+        "z": "b7b706b0b92dc342",
         "group": "grp_sensors",
         "order": 7,
         "width": "3",
@@ -591,9 +591,9 @@
         "wires": []
     },
     {
-        "id": "44c895770b62c4a6",
+        "id": "163e7511c4e05086",
         "type": "ui_text",
-        "z": "b88969bc45616ab9",
+        "z": "b7b706b0b92dc342",
         "group": "grp_sensors",
         "order": 8,
         "width": "3",
@@ -607,9 +607,9 @@
         "wires": []
     },
     {
-        "id": "791d4059bf241e49",
+        "id": "75ac875090d01e52",
         "type": "ui_text",
-        "z": "b88969bc45616ab9",
+        "z": "b7b706b0b92dc342",
         "group": "grp_actuators",
         "order": 1,
         "width": "2",
@@ -623,9 +623,9 @@
         "wires": []
     },
     {
-        "id": "59aab9becee73551",
+        "id": "6f79cce6949e0060",
         "type": "ui_text",
-        "z": "b88969bc45616ab9",
+        "z": "b7b706b0b92dc342",
         "group": "grp_actuators",
         "order": 2,
         "width": "2",
@@ -639,9 +639,9 @@
         "wires": []
     },
     {
-        "id": "0b8ca4ca01d927ba",
+        "id": "51d97c046f7ab21a",
         "type": "ui_text",
-        "z": "b88969bc45616ab9",
+        "z": "b7b706b0b92dc342",
         "group": "grp_actuators",
         "order": 3,
         "width": "2",
@@ -655,9 +655,9 @@
         "wires": []
     },
     {
-        "id": "0ad16494014a4ad3",
+        "id": "e4736c6791663404",
         "type": "ui_button",
-        "z": "b88969bc45616ab9",
+        "z": "b7b706b0b92dc342",
         "name": "Fan ON",
         "group": "grp_actuators",
         "order": 4,
@@ -676,14 +676,14 @@
         "y": 460,
         "wires": [
             [
-                "c1aac8e8c9256e71"
+                "cd7b6058e498f5ea"
             ]
         ]
     },
     {
-        "id": "26f6bb5249ea6a27",
+        "id": "59846b7c9ab587be",
         "type": "ui_button",
-        "z": "b88969bc45616ab9",
+        "z": "b7b706b0b92dc342",
         "name": "Fan OFF",
         "group": "grp_actuators",
         "order": 5,
@@ -702,14 +702,14 @@
         "y": 500,
         "wires": [
             [
-                "c1aac8e8c9256e71"
+                "cd7b6058e498f5ea"
             ]
         ]
     },
     {
-        "id": "a7827f8fd9f2cf6b",
+        "id": "7a237562b3c4426a",
         "type": "ui_button",
-        "z": "b88969bc45616ab9",
+        "z": "b7b706b0b92dc342",
         "name": "Pump ON",
         "group": "grp_actuators",
         "order": 6,
@@ -727,14 +727,14 @@
         "y": 540,
         "wires": [
             [
-                "c1aac8e8c9256e71"
+                "cd7b6058e498f5ea"
             ]
         ]
     },
     {
-        "id": "89588563d25d6d33",
+        "id": "2011ef8d20aeb411",
         "type": "ui_button",
-        "z": "b88969bc45616ab9",
+        "z": "b7b706b0b92dc342",
         "name": "Pump OFF",
         "group": "grp_actuators",
         "order": 7,
@@ -752,14 +752,14 @@
         "y": 580,
         "wires": [
             [
-                "c1aac8e8c9256e71"
+                "cd7b6058e498f5ea"
             ]
         ]
     },
     {
-        "id": "ed3a9219d66e234b",
+        "id": "536e78704517fb9f",
         "type": "ui_button",
-        "z": "b88969bc45616ab9",
+        "z": "b7b706b0b92dc342",
         "name": "Grow Light ON",
         "group": "grp_actuators",
         "order": 8,
@@ -780,14 +780,14 @@
         "y": 620,
         "wires": [
             [
-                "c1aac8e8c9256e71"
+                "cd7b6058e498f5ea"
             ]
         ]
     },
     {
-        "id": "fa0f8272ad90a74a",
+        "id": "8a2edc21a531b80e",
         "type": "ui_button",
-        "z": "b88969bc45616ab9",
+        "z": "b7b706b0b92dc342",
         "name": "Grow Light OFF",
         "group": "grp_actuators",
         "order": 9,
@@ -808,14 +808,14 @@
         "y": 660,
         "wires": [
             [
-                "c1aac8e8c9256e71"
+                "cd7b6058e498f5ea"
             ]
         ]
     },
     {
-        "id": "c1aac8e8c9256e71",
+        "id": "cd7b6058e498f5ea",
         "type": "function",
-        "z": "b88969bc45616ab9",
+        "z": "b7b706b0b92dc342",
         "name": "Manual Override Firebase+MQTT",
         "func": "var device=msg.topic;\nvar state=msg.payload==='ON';\nmsg.url='https://iot-greenhouse-assignment-default-rtdb.asia-southeast1.firebasedatabase.app/actuators/status/'+device+'.json?auth=s85BRUupLYDqKHsYofadrGpOVpy5KfffYXk6nvNV';\nmsg.method='PATCH';\nmsg.headers={'Content-Type':'application/json'};\nmsg.payload=JSON.stringify({state:state,manual:true,updated:new Date().toISOString()});\nreturn msg;\n",
         "outputs": 1,
@@ -823,15 +823,15 @@
         "y": 560,
         "wires": [
             [
-                "2a70188ebfbd7feb",
-                "c515b88b925fe6d6"
+                "3f0ed1e9e73c1668",
+                "bf9d749f5dc61961"
             ]
         ]
     },
     {
-        "id": "2a70188ebfbd7feb",
+        "id": "3f0ed1e9e73c1668",
         "type": "http request",
-        "z": "b88969bc45616ab9",
+        "z": "b7b706b0b92dc342",
         "name": "PATCH actuator to Firebase",
         "method": "use",
         "ret": "txt",
@@ -851,9 +851,9 @@
         ]
     },
     {
-        "id": "0a003693a8a318c9",
+        "id": "8fda9d9d74247064",
         "type": "ui_slider",
-        "z": "b88969bc45616ab9",
+        "z": "b7b706b0b92dc342",
         "name": "Temp MAX (Fan ON)",
         "label": "Max Temp - Fan ON (°C)",
         "group": "grp_thresholds",
@@ -871,14 +871,14 @@
         "y": 720,
         "wires": [
             [
-                "f966bf84d32f682d"
+                "f128b512986ea7e1"
             ]
         ]
     },
     {
-        "id": "cdeb56d04149b97a",
+        "id": "6c870608d878e557",
         "type": "ui_slider",
-        "z": "b88969bc45616ab9",
+        "z": "b7b706b0b92dc342",
         "name": "Temp MIN (Fan OFF)",
         "label": "Min Temp - Fan OFF (°C)",
         "group": "grp_thresholds",
@@ -896,14 +896,14 @@
         "y": 760,
         "wires": [
             [
-                "f966bf84d32f682d"
+                "f128b512986ea7e1"
             ]
         ]
     },
     {
-        "id": "8e52e1a06ae86300",
+        "id": "98e6ed33c538a036",
         "type": "ui_slider",
-        "z": "b88969bc45616ab9",
+        "z": "b7b706b0b92dc342",
         "name": "Soil MIN (Pump ON)",
         "label": "Soil MIN - Pump ON (%)",
         "group": "grp_thresholds",
@@ -921,14 +921,14 @@
         "y": 800,
         "wires": [
             [
-                "f966bf84d32f682d"
+                "f128b512986ea7e1"
             ]
         ]
     },
     {
-        "id": "31b7ed915a5c6b41",
+        "id": "77f31298651002e6",
         "type": "ui_slider",
-        "z": "b88969bc45616ab9",
+        "z": "b7b706b0b92dc342",
         "name": "Soil MAX (Pump OFF)",
         "label": "Soil MAX - Pump OFF (%)",
         "group": "grp_thresholds",
@@ -946,14 +946,14 @@
         "y": 840,
         "wires": [
             [
-                "f966bf84d32f682d"
+                "f128b512986ea7e1"
             ]
         ]
     },
     {
-        "id": "14e4cbda7f94426d",
+        "id": "474a6c74bc3ba64a",
         "type": "ui_slider",
-        "z": "b88969bc45616ab9",
+        "z": "b7b706b0b92dc342",
         "name": "Light DAY MIN",
         "label": "Light DAY MIN (%)",
         "group": "grp_thresholds",
@@ -971,14 +971,14 @@
         "y": 880,
         "wires": [
             [
-                "f966bf84d32f682d"
+                "f128b512986ea7e1"
             ]
         ]
     },
     {
-        "id": "f966bf84d32f682d",
+        "id": "f128b512986ea7e1",
         "type": "function",
-        "z": "b88969bc45616ab9",
+        "z": "b7b706b0b92dc342",
         "name": "Save Threshold",
         "func": "var key = msg.topic;  // e.g. 'temp_max', 'soil_min'\nvar val = parseFloat(msg.payload);\n\n// Out 1: Firebase PATCH\nvar firebaseMsg = {\n  url:     'https://iot-greenhouse-assignment-default-rtdb.asia-southeast1.firebasedatabase.app/thresholds.json?auth=s85BRUupLYDqKHsYofadrGpOVpy5KfffYXk6nvNV',\n  method:  'PATCH',\n  headers: { 'Content-Type': 'application/json' },\n  payload: JSON.stringify({ [key]: val })\n};\n\n// Out 2: MQTT publish so ESP32 receives the updated threshold live\nvar mqttMsg = {\n  payload: JSON.stringify({ [key]: val }),\n  topic:   'bmit2123_assg/greenhouse/thresholds'\n};\n\nnode.status({ fill:'green', shape:'dot', text: key + ' -> ' + val });\nreturn [firebaseMsg, mqttMsg];\n",
         "outputs": 2,
@@ -986,17 +986,17 @@
         "y": 780,
         "wires": [
             [
-                "92d843780132efc1"
+                "5657b053a0aa2c95"
             ],
             [
-                "0f7e613c82d92be5"
+                "942610839c14ab4a"
             ]
         ]
     },
     {
-        "id": "92d843780132efc1",
+        "id": "5657b053a0aa2c95",
         "type": "http request",
-        "z": "b88969bc45616ab9",
+        "z": "b7b706b0b92dc342",
         "name": "PATCH threshold to Firebase",
         "method": "use",
         "ret": "txt",
@@ -1016,9 +1016,9 @@
         ]
     },
     {
-        "id": "59ccf311a74b07b8",
+        "id": "74671c6e0fd9a8bd",
         "type": "ui_chart",
-        "z": "b88969bc45616ab9",
+        "z": "b7b706b0b92dc342",
         "name": "Sensor History",
         "group": "grp_chart",
         "order": 1,
@@ -1052,9 +1052,9 @@
         ]
     },
     {
-        "id": "a20e12297aeeadee",
+        "id": "2fa22477133e23ab",
         "type": "ui_text",
-        "z": "b88969bc45616ab9",
+        "z": "b7b706b0b92dc342",
         "group": "grp_alerts",
         "order": 1,
         "width": "12",
@@ -1068,9 +1068,9 @@
         "wires": []
     },
     {
-        "id": "c8105292a5656219",
+        "id": "c830dba579273bfe",
         "type": "ui_toast",
-        "z": "b88969bc45616ab9",
+        "z": "b7b706b0b92dc342",
         "position": "top right",
         "displayTime": "6",
         "highlight": "#e63946",
@@ -1085,9 +1085,9 @@
         "wires": []
     },
     {
-        "id": "2a379ff8a261629c",
+        "id": "685b19faaec367b8",
         "type": "inject",
-        "z": "b88969bc45616ab9",
+        "z": "b7b706b0b92dc342",
         "name": "Watch alerts every 10s",
         "repeat": "10",
         "once": true,
@@ -1098,14 +1098,14 @@
         "y": 920,
         "wires": [
             [
-                "815e81bdcb6b717f"
+                "92c0d6a519477f07"
             ]
         ]
     },
     {
-        "id": "815e81bdcb6b717f",
+        "id": "92c0d6a519477f07",
         "type": "http request",
-        "z": "b88969bc45616ab9",
+        "z": "b7b706b0b92dc342",
         "name": "GET latest alert",
         "method": "GET",
         "ret": "obj",
@@ -1122,14 +1122,14 @@
         "y": 920,
         "wires": [
             [
-                "a6533d065e5bde41"
+                "b3b8f2bbfd586d66"
             ]
         ]
     },
     {
-        "id": "a6533d065e5bde41",
+        "id": "b3b8f2bbfd586d66",
         "type": "function",
-        "z": "b88969bc45616ab9",
+        "z": "b7b706b0b92dc342",
         "name": "Toast if new alert",
         "func": "var d=msg.payload;\nif(!d||typeof d!=='object')return null;\nvar entries=Object.values(d);\nif(entries.length===0)return null;\nvar latest=entries[entries.length-1];\nvar lastKey=Object.keys(d).pop();\nvar seen=context.get('lastAlertKey')||'';\nif(lastKey===seen)return null;\ncontext.set('lastAlertKey',lastKey);\nreturn{payload:(latest.level==='critical'?'CRITICAL':'WARNING')+': '+latest.message};\n",
         "outputs": 1,
@@ -1137,27 +1137,27 @@
         "y": 920,
         "wires": [
             [
-                "c8105292a5656219"
+                "c830dba579273bfe"
             ]
         ]
     },
     {
-        "id": "c515b88b925fe6d6",
+        "id": "bf9d749f5dc61961",
         "type": "link out",
-        "z": "b88969bc45616ab9",
+        "z": "b7b706b0b92dc342",
         "name": "To MQTT tab",
         "mode": "link",
         "links": [
-            "191a097f78cb1834"
+            "a9f97ec9a7cc1f08"
         ],
         "x": 700,
         "y": 700,
         "wires": []
     },
     {
-        "id": "0f7e613c82d92be5",
+        "id": "942610839c14ab4a",
         "type": "mqtt out",
-        "z": "b88969bc45616ab9",
+        "z": "b7b706b0b92dc342",
         "name": "Publish threshold to ESP32",
         "topic": "bmit2123_assg/greenhouse/thresholds",
         "qos": "1",
@@ -1168,9 +1168,9 @@
         "wires": []
     },
     {
-        "id": "b852f8b3350d92f7",
+        "id": "e8dde6eae221ad02",
         "type": "mqtt in",
-        "z": "ec7345c8ed81b0ca",
+        "z": "0280717f5b143c5b",
         "name": "Subscribe greenhouse/sensors",
         "topic": "bmit2123_assg/greenhouse/sensors",
         "qos": "1",
@@ -1180,18 +1180,18 @@
         "rap": false,
         "rh": 0,
         "inputs": 0,
-        "x": 160,
+        "x": 130,
         "y": 80,
         "wires": [
             [
-                "3f1b1444639b14bb"
+                "db9282659871442c"
             ]
         ]
     },
     {
-        "id": "3f1b1444639b14bb",
+        "id": "db9282659871442c",
         "type": "function",
-        "z": "ec7345c8ed81b0ca",
+        "z": "0280717f5b143c5b",
         "name": "Validate & normalise sensor data",
         "func": "flow.set('lastSensorTime', Date.now());\nflow.set('sensorOffline', false);\n\nvar d = msg.payload;\nif (!d || typeof d !== 'object') {\n  node.warn('Invalid sensor payload: ' + JSON.stringify(d));\n  return null;\n}\n\nfunction safeInt(v)   { var n = parseInt(v);   return isNaN(n) ? null : n; }\nfunction safeFloat(v) { var n = parseFloat(v); return isNaN(n) ? null : n; }\n\nvar temp = safeFloat(d.temperature) !== null ? safeFloat(d.temperature) : 0;\nvar humi = safeFloat(d.humidity)    !== null ? safeFloat(d.humidity)    : 0;\n\nvar soilPct = (function() {\n  var candidates = [d.soil_pct, d.soil_moisture, d.soil, d.soilMoisture];\n  for (var i = 0; i < candidates.length; i++) {\n    var v = safeInt(candidates[i]);\n    if (v !== null) return v;\n  }\n  return 0;\n})();\n\nvar lightPct = (function() {\n  var candidates = [d.light_pct, d.light_level, d.lightLevel, d.light];\n  for (var i = 0; i < candidates.length; i++) {\n    var v = safeInt(candidates[i]);\n    if (v !== null) return v;\n  }\n  return 0;\n})();\n\nnode.warn('COMPUTED: soilPct=' + soilPct + ' lightPct=' + lightPct);\n\nvar now = new Date().toISOString();\n\nvar sensorMsg = { payload: {\n  temperature: parseFloat(temp.toFixed(1)),\n  humidity:    parseFloat(humi.toFixed(1)),\n  soil_pct:    soilPct,\n  light_pct:   lightPct,\n  timestamp:   now\n}};\n\nfunction toState(v) {\n  if (typeof v === 'boolean') return v;\n  if (typeof v === 'string')  return v.toUpperCase() === 'ON';\n  return !!v;\n}\nvar actuatorMsg = { payload: {\n  fan:       { state: toState(d.fan),   updated: now, manual: false },\n  pump:      { state: toState(d.pump),  updated: now, manual: false },\n  growLight: { state: toState(d.light), updated: now, manual: false }\n}};\n\nnode.status({ fill:'green', shape:'dot',\n  text: 'T:' + temp.toFixed(1) + 'C S:' + soilPct + '% L:' + lightPct + '%' });\nreturn [sensorMsg, actuatorMsg];\n",
         "outputs": 2,
@@ -1200,22 +1200,23 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 440,
+        "x": 400,
         "y": 80,
         "wires": [
             [
-                "a586ed77fca84ba4",
-                "2dfd9cd1e3b37bfa"
+                "eb5c91f6b5121866",
+                "5e09157f83f9ae35",
+                "53c55ac4a88d94a6"
             ],
             [
-                "a8086562981c0cb0"
+                "65b193233c839255"
             ]
         ]
     },
     {
-        "id": "a586ed77fca84ba4",
+        "id": "eb5c91f6b5121866",
         "type": "function",
-        "z": "ec7345c8ed81b0ca",
+        "z": "0280717f5b143c5b",
         "name": "Build PUT /sensors/current",
         "func": "var secret='s85BRUupLYDqKHsYofadrGpOVpy5KfffYXk6nvNV';\nmsg.url='https://iot-greenhouse-assignment-default-rtdb.asia-southeast1.firebasedatabase.app/sensors/current.json?auth='+secret;\nmsg.method='PUT';\nmsg.headers={'Content-Type':'application/json'};\nmsg.payload=JSON.stringify(msg.payload);\nreturn msg;\n",
         "outputs": 1,
@@ -1223,14 +1224,14 @@
         "y": 60,
         "wires": [
             [
-                "a30ed4532d7777a0"
+                "a637d747c65ef7a4"
             ]
         ]
     },
     {
-        "id": "a30ed4532d7777a0",
+        "id": "a637d747c65ef7a4",
         "type": "http request",
-        "z": "ec7345c8ed81b0ca",
+        "z": "0280717f5b143c5b",
         "name": "PUT /sensors/current",
         "method": "use",
         "ret": "txt",
@@ -1247,14 +1248,14 @@
         "y": 60,
         "wires": [
             [
-                "60458ea9d4b7b3ee"
+                "e8fbba982016689d"
             ]
         ]
     },
     {
-        "id": "2dfd9cd1e3b37bfa",
+        "id": "5e09157f83f9ae35",
         "type": "function",
-        "z": "ec7345c8ed81b0ca",
+        "z": "0280717f5b143c5b",
         "name": "Check thresholds alert",
         "func": "var d   = msg.payload;\nvar thr = flow.get('thresholds') || {\n  temp_max: 30, temp_min: 28,\n  soil_min: 30, soil_max: 60,\n  light_day_min: 20, humidity_max: 85\n};\n\nvar alerts = [];\n\nif (d.temperature > thr.temp_max + 5)\n  alerts.push({ level:'critical', message:'Temperature critically high: ' + d.temperature + 'C' });\nelse if (d.temperature > thr.temp_max)\n  alerts.push({ level:'warning',  message:'Temperature high: ' + d.temperature + 'C' });\n\nif (d.humidity > (thr.humidity_max || 85))\n  alerts.push({ level:'warning', message:'Humidity very high: ' + d.humidity + '%' });\n\nif (d.soil_pct < thr.soil_min - 10)\n  alerts.push({ level:'critical', message:'Soil critically dry: ' + d.soil_pct + '%' });\nelse if (d.soil_pct < thr.soil_min)\n  alerts.push({ level:'warning',  message:'Soil moisture low: ' + d.soil_pct + '%' });\n\nif (alerts.length === 0) return null;\n\nvar ts = Date.now();\nalerts.forEach(function(a, i) {\n  a.timestamp = new Date(ts + i).toLocaleString('en-MY', { timeZone: 'Asia/Kuala_Lumpur' });\n});\nmsg.alerts = alerts;\nreturn msg;\n",
         "outputs": 1,
@@ -1262,14 +1263,14 @@
         "y": 120,
         "wires": [
             [
-                "4adbd746fd361fd0"
+                "7f75a8847ec45449"
             ]
         ]
     },
     {
-        "id": "4adbd746fd361fd0",
+        "id": "7f75a8847ec45449",
         "type": "function",
-        "z": "ec7345c8ed81b0ca",
+        "z": "0280717f5b143c5b",
         "name": "Build POST alerts",
         "func": "var secret='s85BRUupLYDqKHsYofadrGpOVpy5KfffYXk6nvNV';\nvar base='https://iot-greenhouse-assignment-default-rtdb.asia-southeast1.firebasedatabase.app/alerts.json?auth='+secret;\nvar msgs=[];\nmsg.alerts.forEach(function(a){msgs.push({url:base,method:'POST',headers:{'Content-Type':'application/json'},payload:JSON.stringify(a)});});\nreturn msgs.map(function(m){return{payload:m.payload,url:m.url,method:m.method,headers:m.headers};});\n",
         "outputs": 1,
@@ -1277,14 +1278,14 @@
         "y": 120,
         "wires": [
             [
-                "45f785273b96e439"
+                "ae48816c25b3fddf"
             ]
         ]
     },
     {
-        "id": "45f785273b96e439",
+        "id": "ae48816c25b3fddf",
         "type": "http request",
-        "z": "ec7345c8ed81b0ca",
+        "z": "0280717f5b143c5b",
         "name": "POST /alerts",
         "method": "use",
         "ret": "txt",
@@ -1304,9 +1305,9 @@
         ]
     },
     {
-        "id": "ae082d33b2c2e609",
+        "id": "26f34037e062050f",
         "type": "mqtt in",
-        "z": "ec7345c8ed81b0ca",
+        "z": "0280717f5b143c5b",
         "name": "Subscribe greenhouse/actuators",
         "topic": "bmit2123_assg/greenhouse/actuators",
         "qos": "1",
@@ -1320,14 +1321,14 @@
         "y": 260,
         "wires": [
             [
-                "36026b559053e7a5"
+                "d0f58398131c9242"
             ]
         ]
     },
     {
-        "id": "36026b559053e7a5",
+        "id": "d0f58398131c9242",
         "type": "function",
-        "z": "ec7345c8ed81b0ca",
+        "z": "0280717f5b143c5b",
         "name": "Validate actuator payload",
         "func": "var d=msg.payload;\nif(!d||typeof d!=='object'){return null;}\nfunction toState(v){if(typeof v==='boolean')return v;if(typeof v==='string')return v.toUpperCase()==='ON';return!!v;}\nvar now=new Date().toISOString();\nmsg.payload={fan:{state:toState(d.fan),updated:now,manual:false},pump:{state:toState(d.pump),updated:now,manual:false},growLight:{state:toState(d.growLight||d.light),updated:now,manual:false}};\nreturn msg;\n",
         "outputs": 1,
@@ -1335,14 +1336,14 @@
         "y": 260,
         "wires": [
             [
-                "8ce213958e41c6d1"
+                "5921773e99a7b249"
             ]
         ]
     },
     {
-        "id": "8ce213958e41c6d1",
+        "id": "5921773e99a7b249",
         "type": "function",
-        "z": "ec7345c8ed81b0ca",
+        "z": "0280717f5b143c5b",
         "name": "Build PUT /actuators/status",
         "func": "var secret='s85BRUupLYDqKHsYofadrGpOVpy5KfffYXk6nvNV';\nmsg.url='https://iot-greenhouse-assignment-default-rtdb.asia-southeast1.firebasedatabase.app/actuators/status.json?auth='+secret;\nmsg.method='PUT';\nmsg.headers={'Content-Type':'application/json'};\nmsg.payload=JSON.stringify(msg.payload);\nreturn msg;\n",
         "outputs": 1,
@@ -1350,14 +1351,14 @@
         "y": 260,
         "wires": [
             [
-                "28d184a9feca4f82"
+                "4698851f6592cd5e"
             ]
         ]
     },
     {
-        "id": "28d184a9feca4f82",
+        "id": "4698851f6592cd5e",
         "type": "http request",
-        "z": "ec7345c8ed81b0ca",
+        "z": "0280717f5b143c5b",
         "name": "PUT /actuators/status",
         "method": "use",
         "ret": "txt",
@@ -1377,9 +1378,9 @@
         ]
     },
     {
-        "id": "eccd51041be6224f",
+        "id": "9e8dfd8be079999d",
         "type": "mqtt in",
-        "z": "ec7345c8ed81b0ca",
+        "z": "0280717f5b143c5b",
         "name": "Subscribe greenhouse/thresholds",
         "topic": "bmit2123_assg/greenhouse/thresholds",
         "qos": "1",
@@ -1393,14 +1394,14 @@
         "y": 400,
         "wires": [
             [
-                "3660f43c8a3754f4"
+                "4ff771b67223d8e9"
             ]
         ]
     },
     {
-        "id": "3660f43c8a3754f4",
+        "id": "4ff771b67223d8e9",
         "type": "function",
-        "z": "ec7345c8ed81b0ca",
+        "z": "0280717f5b143c5b",
         "name": "Cache thresholds",
         "func": "var d=msg.payload;\nif(!d||typeof d!=='object')return null;\nvar existing=flow.get('thresholds')||{};\nvar merged=Object.assign({},existing,d);\nflow.set('thresholds',merged);\nvar secret='s85BRUupLYDqKHsYofadrGpOVpy5KfffYXk6nvNV';\nmsg.url='https://iot-greenhouse-assignment-default-rtdb.asia-southeast1.firebasedatabase.app/thresholds.json?auth='+secret;\nmsg.method='PATCH';\nmsg.headers={'Content-Type':'application/json'};\nmsg.payload=JSON.stringify(d);\nreturn msg;\n",
         "outputs": 1,
@@ -1408,14 +1409,14 @@
         "y": 400,
         "wires": [
             [
-                "2bb9badaf81c3d0c"
+                "d717ea9d9aba03a9"
             ]
         ]
     },
     {
-        "id": "2bb9badaf81c3d0c",
+        "id": "d717ea9d9aba03a9",
         "type": "http request",
-        "z": "ec7345c8ed81b0ca",
+        "z": "0280717f5b143c5b",
         "name": "PATCH /thresholds",
         "method": "use",
         "ret": "txt",
@@ -1435,9 +1436,9 @@
         ]
     },
     {
-        "id": "4dd0af1fc717300d",
+        "id": "28fa72d91a3c9a7c",
         "type": "mqtt out",
-        "z": "ec7345c8ed81b0ca",
+        "z": "0280717f5b143c5b",
         "name": "Publish greenhouse/actuators",
         "topic": "bmit2123_assg/greenhouse/actuators",
         "qos": "1",
@@ -1448,9 +1449,9 @@
         "wires": []
     },
     {
-        "id": "efcef2fbf1062809",
+        "id": "8c37d1e8c51cf65a",
         "type": "function",
-        "z": "ec7345c8ed81b0ca",
+        "z": "0280717f5b143c5b",
         "name": "Dashboard override MQTT",
         "func": "var device = msg.topic;  // 'fan' | 'pump' | 'growLight'\n\n// msg.payload is JSON string from Manual Override function\nvar state = false;\nif (typeof msg.payload === 'string') {\n  try { state = JSON.parse(msg.payload).state === true; } catch(e) {}\n} else if (msg.payload && typeof msg.payload === 'object') {\n  state = msg.payload.state === true;\n}\n\n// ESP32 uses key 'light' not 'growLight'\nvar espKey = (device === 'growLight') ? 'light' : device;\n\n// ESP32 callback checks: doc['fan'] == 'ON'  → MUST be string, not boolean\nmsg.payload = JSON.stringify({ [espKey]: state ? 'ON' : 'OFF' });\nmsg.topic   = 'bmit2123_assg/greenhouse/actuators';\nnode.status({ fill:'orange', shape:'dot',\n  text: 'CMD ' + espKey + ' -> ' + (state ? 'ON' : 'OFF') });\nreturn msg;\n",
         "outputs": 1,
@@ -1458,30 +1459,30 @@
         "y": 480,
         "wires": [
             [
-                "4dd0af1fc717300d"
+                "28fa72d91a3c9a7c"
             ]
         ]
     },
     {
-        "id": "191a097f78cb1834",
+        "id": "a9f97ec9a7cc1f08",
         "type": "link in",
-        "z": "ec7345c8ed81b0ca",
+        "z": "0280717f5b143c5b",
         "name": "From dashboard manual buttons",
         "links": [
-            "c515b88b925fe6d6"
+            "bf9d749f5dc61961"
         ],
         "x": 460,
         "y": 480,
         "wires": [
             [
-                "efcef2fbf1062809"
+                "8c37d1e8c51cf65a"
             ]
         ]
     },
     {
-        "id": "3f9e9e55c1b55d4b",
+        "id": "427c844fb6d8f1a0",
         "type": "inject",
-        "z": "ec7345c8ed81b0ca",
+        "z": "0280717f5b143c5b",
         "name": "Load thresholds on start",
         "repeat": "",
         "once": true,
@@ -1492,14 +1493,14 @@
         "y": 540,
         "wires": [
             [
-                "ce82e6cf794a61d2"
+                "46801561b0c2d1e3"
             ]
         ]
     },
     {
-        "id": "ce82e6cf794a61d2",
+        "id": "46801561b0c2d1e3",
         "type": "http request",
-        "z": "ec7345c8ed81b0ca",
+        "z": "0280717f5b143c5b",
         "name": "GET /thresholds",
         "method": "GET",
         "ret": "obj",
@@ -1516,14 +1517,14 @@
         "y": 540,
         "wires": [
             [
-                "2996141e97e9350b"
+                "1fcaa10a30ac49e8"
             ]
         ]
     },
     {
-        "id": "2996141e97e9350b",
+        "id": "1fcaa10a30ac49e8",
         "type": "function",
-        "z": "ec7345c8ed81b0ca",
+        "z": "0280717f5b143c5b",
         "name": "Seed threshold cache",
         "func": "var d = msg.payload;\nvar defaults = {\n  temp_max: 30, temp_min: 28,\n  soil_min: 30, soil_max: 60,\n  light_day_min: 20, humidity_max: 85, temp_cold: 15\n};\nvar merged = Object.assign({}, defaults, (d && typeof d === 'object') ? d : {});\nflow.set('thresholds', merged);\nnode.status({ fill:'green', shape:'dot', text:'thresholds cached' });\nreturn null;\n",
         "outputs": 1,
@@ -1534,9 +1535,9 @@
         ]
     },
     {
-        "id": "a8086562981c0cb0",
+        "id": "65b193233c839255",
         "type": "function",
-        "z": "ec7345c8ed81b0ca",
+        "z": "0280717f5b143c5b",
         "name": "Build PUT /actuators (from ESP32 sensor)",
         "func": "var secret = 's85BRUupLYDqKHsYofadrGpOVpy5KfffYXk6nvNV';\nmsg.url     = 'https://iot-greenhouse-assignment-default-rtdb.asia-southeast1.firebasedatabase.app/actuators/status.json?auth=' + secret;\nmsg.method  = 'PUT';\nmsg.headers = { 'Content-Type': 'application/json' };\nmsg.payload = JSON.stringify(msg.payload);\nreturn msg;\n",
         "outputs": 1,
@@ -1544,14 +1545,14 @@
         "y": 160,
         "wires": [
             [
-                "53006791d7499cd2"
+                "226b1a4884891473"
             ]
         ]
     },
     {
-        "id": "53006791d7499cd2",
+        "id": "226b1a4884891473",
         "type": "http request",
-        "z": "ec7345c8ed81b0ca",
+        "z": "0280717f5b143c5b",
         "name": "PUT /actuators/status → Firebase",
         "method": "use",
         "ret": "txt",
@@ -1571,9 +1572,9 @@
         ]
     },
     {
-        "id": "60458ea9d4b7b3ee",
+        "id": "e8fbba982016689d",
         "type": "debug",
-        "z": "ec7345c8ed81b0ca",
+        "z": "0280717f5b143c5b",
         "name": "PUT Firebase Response",
         "active": true,
         "tosidebar": true,
@@ -1588,7 +1589,85 @@
         "wires": []
     },
     {
-        "id": "8d2f6925d299d8c5",
+        "id": "891282defd2d8b75",
+        "type": "mqtt in",
+        "z": "0280717f5b143c5b",
+        "name": "Incoming Alerts",
+        "topic": "bmit2123_assg/greenhouse/commands",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 160,
+        "y": 640,
+        "wires": [
+            [
+                "7b730e4ced3a275a"
+            ]
+        ]
+    },
+    {
+        "id": "7b730e4ced3a275a",
+        "type": "function",
+        "z": "0280717f5b143c5b",
+        "name": "Format Alert Message",
+        "func": "let data = msg.payload;\n// If it's a string, turn it into an object\nif (typeof data === \"string\") {\n    try { data = JSON.parse(data); } catch(e) {}\n}\n\n// Check if there is a log message\nif (data.log) {\n    msg.payload = data.log;\n    return msg;\n}\nreturn null; // Don't show anything if there's no log",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 420,
+        "y": 640,
+        "wires": [
+            [
+                "6dbf91c8f8772fa0"
+            ]
+        ]
+    },
+    {
+        "id": "53c55ac4a88d94a6",
+        "type": "function",
+        "z": "0280717f5b143c5b",
+        "name": "Rolling Avg (10 mins)",
+        "func": "// Create a storage array if it doesn't exist\nlet readings = context.get(\"readings\") || [];\n\n// Get temp from your payload\nlet temp = msg.payload.temperature;\n\nif (temp !== undefined) {\n    readings.push(temp);\n}\n\n// Keep only the last 10 readings\nif (readings.length > 10) { readings.shift(); }\n\n// Calculate Average\nlet avg = readings.reduce((a,b) => a + b, 0) / readings.length;\n\n// Save back to memory\ncontext.set(\"readings\", readings);\n\n// Send to Dashboard\nmsg.payload = avg.toFixed(1) + \" °C\";\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 700,
+        "y": 220,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "6dbf91c8f8772fa0",
+        "type": "ui_toast",
+        "z": "0280717f5b143c5b",
+        "position": "top right",
+        "displayTime": "10",
+        "highlight": "",
+        "sendall": true,
+        "outputs": 0,
+        "ok": "OK",
+        "cancel": "",
+        "raw": false,
+        "className": "",
+        "topic": "",
+        "name": "",
+        "x": 730,
+        "y": 640,
+        "wires": []
+    },
+    {
+        "id": "334bc9534827e9d3",
         "type": "global-config",
         "env": [],
         "modules": {
