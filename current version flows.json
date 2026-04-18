@@ -1601,7 +1601,7 @@
         "authType": "",
         "senderr": false,
         "headers": [],
-        "x": 960,
+        "x": 1060,
         "y": 160,
         "wires": [
             []
@@ -1620,8 +1620,8 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "auto",
-        "x": 960,
-        "y": 120,
+        "x": 1310,
+        "y": 60,
         "wires": []
     },
     {
@@ -1681,8 +1681,7 @@
         "y": 220,
         "wires": [
             [
-                "866d8b583a443866",
-                "108c533e3dd77954"
+                "866d8b583a443866"
             ]
         ]
     },
@@ -1706,50 +1705,6 @@
         "wires": []
     },
     {
-        "id": "108c533e3dd77954",
-        "type": "ui_chart",
-        "z": "0280717f5b143c5b",
-        "name": "Temperature Trend (°C)",
-        "group": "grp_chart",
-        "order": 1,
-        "width": 0,
-        "height": 0,
-        "label": "chart",
-        "chartType": "line",
-        "legend": "false",
-        "xformat": "HH:mm:ss",
-        "interpolate": "linear",
-        "nodata": "",
-        "dot": false,
-        "ymin": "",
-        "ymax": "",
-        "removeOlder": 1,
-        "removeOlderPoints": "",
-        "removeOlderUnit": "3600",
-        "cutout": 0,
-        "useOneColor": false,
-        "useUTC": false,
-        "colors": [
-            "#1f77b4",
-            "#aec7e8",
-            "#ff7f0e",
-            "#2ca02c",
-            "#98df8a",
-            "#d62728",
-            "#ff9896",
-            "#9467bd",
-            "#c5b0d5"
-        ],
-        "outputs": 1,
-        "useDifferentColor": false,
-        "className": "",
-        "x": 990,
-        "y": 200,
-        "wires": [
-            []
-        ]
-    },
-    {
         "id": "866d8b583a443866",
         "type": "ui_text",
         "z": "0280717f5b143c5b",
@@ -1766,8 +1721,8 @@
         "font": "",
         "fontSize": 16,
         "color": "#000000",
-        "x": 980,
-        "y": 240,
+        "x": 1060,
+        "y": 220,
         "wires": []
     },
     {
@@ -1786,7 +1741,6 @@
         "y": 300,
         "wires": [
             [
-                "6ffc5c464b7ea748",
                 "d22837c68de2913b"
             ]
         ]
@@ -1807,53 +1761,8 @@
         "y": 380,
         "wires": [
             [
-                "ec3a828035d2d27d",
                 "0f201a58e0b9038a"
             ]
-        ]
-    },
-    {
-        "id": "6ffc5c464b7ea748",
-        "type": "ui_chart",
-        "z": "0280717f5b143c5b",
-        "name": "Humidity Trend (%)",
-        "group": "grp_chart",
-        "order": 2,
-        "width": 0,
-        "height": 0,
-        "label": "chart",
-        "chartType": "line",
-        "legend": "false",
-        "xformat": "HH:mm:ss",
-        "interpolate": "linear",
-        "nodata": "",
-        "dot": false,
-        "ymin": "",
-        "ymax": "",
-        "removeOlder": 1,
-        "removeOlderPoints": "",
-        "removeOlderUnit": "3600",
-        "cutout": 0,
-        "useOneColor": false,
-        "useUTC": false,
-        "colors": [
-            "#1f77b4",
-            "#aec7e8",
-            "#ff7f0e",
-            "#2ca02c",
-            "#98df8a",
-            "#d62728",
-            "#ff9896",
-            "#9467bd",
-            "#c5b0d5"
-        ],
-        "outputs": 1,
-        "useDifferentColor": false,
-        "className": "",
-        "x": 1030,
-        "y": 280,
-        "wires": [
-            []
         ]
     },
     {
@@ -1873,53 +1782,9 @@
         "font": "",
         "fontSize": 16,
         "color": "#000000",
-        "x": 1030,
-        "y": 320,
+        "x": 1090,
+        "y": 300,
         "wires": []
-    },
-    {
-        "id": "ec3a828035d2d27d",
-        "type": "ui_chart",
-        "z": "0280717f5b143c5b",
-        "name": "Soil Moisture Trend (%)",
-        "group": "grp_chart",
-        "order": 3,
-        "width": 0,
-        "height": 0,
-        "label": "chart",
-        "chartType": "line",
-        "legend": "false",
-        "xformat": "HH:mm:ss",
-        "interpolate": "linear",
-        "nodata": "",
-        "dot": false,
-        "ymin": "",
-        "ymax": "",
-        "removeOlder": 1,
-        "removeOlderPoints": "",
-        "removeOlderUnit": "3600",
-        "cutout": 0,
-        "useOneColor": false,
-        "useUTC": false,
-        "colors": [
-            "#1f77b4",
-            "#aec7e8",
-            "#ff7f0e",
-            "#2ca02c",
-            "#98df8a",
-            "#d62728",
-            "#ff9896",
-            "#9467bd",
-            "#c5b0d5"
-        ],
-        "outputs": 1,
-        "useDifferentColor": false,
-        "className": "",
-        "x": 1050,
-        "y": 360,
-        "wires": [
-            []
-        ]
     },
     {
         "id": "0f201a58e0b9038a",
@@ -1938,8 +1803,8 @@
         "font": "",
         "fontSize": 16,
         "color": "#000000",
-        "x": 1040,
-        "y": 400,
+        "x": 1080,
+        "y": 380,
         "wires": []
     }
 ]
