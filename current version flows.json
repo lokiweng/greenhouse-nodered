@@ -266,6 +266,14 @@
         "willPayload": ""
     },
     {
+        "id": "aab08f4bb0fac75e",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-dashboard": "3.6.6"
+        }
+    },
+    {
         "id": "03a077c16fa9ecd2",
         "type": "inject",
         "z": "b7b706b0b92dc342",
@@ -1036,17 +1044,25 @@
         "removeOlder": 1,
         "removeOlderPoints": "60",
         "removeOlderUnit": "3600",
+        "cutout": "",
         "useOneColor": false,
         "useUTC": false,
         "colors": [
             "#e63946",
             "#2a9d8f",
-            "#f4a261"
+            "#f4a261",
+            "#000000",
+            "#000000",
+            "#000000",
+            "#000000",
+            "#000000",
+            "#000000"
         ],
         "outputs": 1,
+        "useDifferentColor": false,
         "className": "",
-        "x": 1010,
-        "y": 880,
+        "x": 1020,
+        "y": 480,
         "wires": [
             []
         ]
@@ -1079,6 +1095,8 @@
         "ok": "Dismiss",
         "cancel": "",
         "raw": false,
+        "className": "",
+        "topic": "",
         "name": "Alert Toast",
         "x": 1000,
         "y": 920,
@@ -1089,9 +1107,20 @@
         "type": "inject",
         "z": "b7b706b0b92dc342",
         "name": "Watch alerts every 10s",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
         "repeat": "10",
+        "crontab": "",
         "once": true,
         "onceDelay": 2,
+        "topic": "",
         "payload": "",
         "payloadType": "date",
         "x": 160,
@@ -1133,6 +1162,11 @@
         "name": "Toast if new alert",
         "func": "var d=msg.payload;\nif(!d||typeof d!=='object')return null;\nvar entries=Object.values(d);\nif(entries.length===0)return null;\nvar latest=entries[entries.length-1];\nvar lastKey=Object.keys(d).pop();\nvar seen=context.get('lastAlertKey')||'';\nif(lastKey===seen)return null;\ncontext.set('lastAlertKey',lastKey);\nreturn{payload:(latest.level==='critical'?'CRITICAL':'WARNING')+': '+latest.message};\n",
         "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
         "x": 680,
         "y": 920,
         "wires": [
@@ -1206,7 +1240,9 @@
             [
                 "eb5c91f6b5121866",
                 "5e09157f83f9ae35",
-                "53c55ac4a88d94a6"
+                "53c55ac4a88d94a6",
+                "aa4943f62a1c09e6",
+                "7bb34af51b99bfcb"
             ],
             [
                 "65b193233c839255"
@@ -1317,8 +1353,8 @@
         "rap": false,
         "rh": 0,
         "inputs": 0,
-        "x": 160,
-        "y": 260,
+        "x": 190,
+        "y": 500,
         "wires": [
             [
                 "d0f58398131c9242"
@@ -1332,8 +1368,8 @@
         "name": "Validate actuator payload",
         "func": "var d=msg.payload;\nif(!d||typeof d!=='object'){return null;}\nfunction toState(v){if(typeof v==='boolean')return v;if(typeof v==='string')return v.toUpperCase()==='ON';return!!v;}\nvar now=new Date().toISOString();\nmsg.payload={fan:{state:toState(d.fan),updated:now,manual:false},pump:{state:toState(d.pump),updated:now,manual:false},growLight:{state:toState(d.growLight||d.light),updated:now,manual:false}};\nreturn msg;\n",
         "outputs": 1,
-        "x": 440,
-        "y": 260,
+        "x": 470,
+        "y": 500,
         "wires": [
             [
                 "5921773e99a7b249"
@@ -1347,8 +1383,8 @@
         "name": "Build PUT /actuators/status",
         "func": "var secret='s85BRUupLYDqKHsYofadrGpOVpy5KfffYXk6nvNV';\nmsg.url='https://iot-greenhouse-assignment-default-rtdb.asia-southeast1.firebasedatabase.app/actuators/status.json?auth='+secret;\nmsg.method='PUT';\nmsg.headers={'Content-Type':'application/json'};\nmsg.payload=JSON.stringify(msg.payload);\nreturn msg;\n",
         "outputs": 1,
-        "x": 700,
-        "y": 260,
+        "x": 730,
+        "y": 500,
         "wires": [
             [
                 "4698851f6592cd5e"
@@ -1371,8 +1407,8 @@
         "authType": "",
         "senderr": false,
         "headers": [],
-        "x": 960,
-        "y": 260,
+        "x": 990,
+        "y": 500,
         "wires": [
             []
         ]
@@ -1390,8 +1426,8 @@
         "rap": false,
         "rh": 0,
         "inputs": 0,
-        "x": 160,
-        "y": 400,
+        "x": 190,
+        "y": 580,
         "wires": [
             [
                 "4ff771b67223d8e9"
@@ -1405,8 +1441,8 @@
         "name": "Cache thresholds",
         "func": "var d=msg.payload;\nif(!d||typeof d!=='object')return null;\nvar existing=flow.get('thresholds')||{};\nvar merged=Object.assign({},existing,d);\nflow.set('thresholds',merged);\nvar secret='s85BRUupLYDqKHsYofadrGpOVpy5KfffYXk6nvNV';\nmsg.url='https://iot-greenhouse-assignment-default-rtdb.asia-southeast1.firebasedatabase.app/thresholds.json?auth='+secret;\nmsg.method='PATCH';\nmsg.headers={'Content-Type':'application/json'};\nmsg.payload=JSON.stringify(d);\nreturn msg;\n",
         "outputs": 1,
-        "x": 440,
-        "y": 400,
+        "x": 470,
+        "y": 580,
         "wires": [
             [
                 "d717ea9d9aba03a9"
@@ -1429,8 +1465,8 @@
         "authType": "",
         "senderr": false,
         "headers": [],
-        "x": 700,
-        "y": 400,
+        "x": 730,
+        "y": 580,
         "wires": [
             []
         ]
@@ -1444,8 +1480,8 @@
         "qos": "1",
         "retain": "false",
         "broker": "mqtt_broker_cfg",
-        "x": 960,
-        "y": 480,
+        "x": 990,
+        "y": 660,
         "wires": []
     },
     {
@@ -1455,8 +1491,8 @@
         "name": "Dashboard override MQTT",
         "func": "var device = msg.topic;  // 'fan' | 'pump' | 'growLight'\n\n// msg.payload is JSON string from Manual Override function\nvar state = false;\nif (typeof msg.payload === 'string') {\n  try { state = JSON.parse(msg.payload).state === true; } catch(e) {}\n} else if (msg.payload && typeof msg.payload === 'object') {\n  state = msg.payload.state === true;\n}\n\n// ESP32 uses key 'light' not 'growLight'\nvar espKey = (device === 'growLight') ? 'light' : device;\n\n// ESP32 callback checks: doc['fan'] == 'ON'  → MUST be string, not boolean\nmsg.payload = JSON.stringify({ [espKey]: state ? 'ON' : 'OFF' });\nmsg.topic   = 'bmit2123_assg/greenhouse/actuators';\nnode.status({ fill:'orange', shape:'dot',\n  text: 'CMD ' + espKey + ' -> ' + (state ? 'ON' : 'OFF') });\nreturn msg;\n",
         "outputs": 1,
-        "x": 700,
-        "y": 480,
+        "x": 730,
+        "y": 660,
         "wires": [
             [
                 "28fa72d91a3c9a7c"
@@ -1471,8 +1507,8 @@
         "links": [
             "bf9d749f5dc61961"
         ],
-        "x": 460,
-        "y": 480,
+        "x": 490,
+        "y": 660,
         "wires": [
             [
                 "8c37d1e8c51cf65a"
@@ -1489,8 +1525,8 @@
         "onceDelay": 1,
         "payload": "",
         "payloadType": "date",
-        "x": 180,
-        "y": 540,
+        "x": 210,
+        "y": 720,
         "wires": [
             [
                 "46801561b0c2d1e3"
@@ -1513,8 +1549,8 @@
         "authType": "",
         "senderr": false,
         "headers": [],
-        "x": 480,
-        "y": 540,
+        "x": 510,
+        "y": 720,
         "wires": [
             [
                 "1fcaa10a30ac49e8"
@@ -1528,8 +1564,8 @@
         "name": "Seed threshold cache",
         "func": "var d = msg.payload;\nvar defaults = {\n  temp_max: 30, temp_min: 28,\n  soil_min: 30, soil_max: 60,\n  light_day_min: 20, humidity_max: 85, temp_cold: 15\n};\nvar merged = Object.assign({}, defaults, (d && typeof d === 'object') ? d : {});\nflow.set('thresholds', merged);\nnode.status({ fill:'green', shape:'dot', text:'thresholds cached' });\nreturn null;\n",
         "outputs": 1,
-        "x": 730,
-        "y": 540,
+        "x": 760,
+        "y": 720,
         "wires": [
             []
         ]
@@ -1601,8 +1637,8 @@
         "rap": true,
         "rh": 0,
         "inputs": 0,
-        "x": 160,
-        "y": 640,
+        "x": 190,
+        "y": 820,
         "wires": [
             [
                 "7b730e4ced3a275a"
@@ -1621,8 +1657,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 420,
-        "y": 640,
+        "x": 450,
+        "y": 820,
         "wires": [
             [
                 "6dbf91c8f8772fa0"
@@ -1633,18 +1669,21 @@
         "id": "53c55ac4a88d94a6",
         "type": "function",
         "z": "0280717f5b143c5b",
-        "name": "Rolling Avg (10 mins)",
-        "func": "// Create a storage array if it doesn't exist\nlet readings = context.get(\"readings\") || [];\n\n// Get temp from your payload\nlet temp = msg.payload.temperature;\n\nif (temp !== undefined) {\n    readings.push(temp);\n}\n\n// Keep only the last 10 readings\nif (readings.length > 10) { readings.shift(); }\n\n// Calculate Average\nlet avg = readings.reduce((a,b) => a + b, 0) / readings.length;\n\n// Save back to memory\ncontext.set(\"readings\", readings);\n\n// Send to Dashboard\nmsg.payload = avg.toFixed(1) + \" °C\";\nreturn msg;",
+        "name": "Temp Rolling Avg (10 mins)",
+        "func": "// Get stored data (array of objects)\nlet readings = context.get(\"readings\") || [];\n\n// Current time\nlet now = Date.now();\n\n// Get value (CHANGE this for temp/humidity/soil)\nlet value = msg.payload.temperature;\n\n// Add new reading\nif (value !== undefined) {\n    readings.push({\n        value: value,\n        time: now\n    });\n}\n\n// Keep only last 10 minutes (600000 ms)\nreadings = readings.filter(r => now - r.time <= 600000);\n\n// Calculate average\nlet sum = 0;\nfor (let i = 0; i < readings.length; i++) {\n    sum += readings[i].value;\n}\n\nlet avg = readings.length > 0 ? sum / readings.length : 0;\n\n// Save back\ncontext.set(\"readings\", readings);\n\n// Output to dashboard\nmsg.payload = avg.toFixed(1) + \" °C\";\n\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 700,
+        "x": 720,
         "y": 220,
         "wires": [
-            []
+            [
+                "866d8b583a443866",
+                "108c533e3dd77954"
+            ]
         ]
     },
     {
@@ -1662,16 +1701,245 @@
         "className": "",
         "topic": "",
         "name": "",
-        "x": 730,
-        "y": 640,
+        "x": 760,
+        "y": 820,
         "wires": []
     },
     {
-        "id": "aab08f4bb0fac75e",
-        "type": "global-config",
-        "env": [],
-        "modules": {
-            "node-red-dashboard": "3.6.6"
-        }
+        "id": "108c533e3dd77954",
+        "type": "ui_chart",
+        "z": "0280717f5b143c5b",
+        "name": "Temperature Trend (°C)",
+        "group": "grp_chart",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "label": "chart",
+        "chartType": "line",
+        "legend": "false",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "",
+        "dot": false,
+        "ymin": "",
+        "ymax": "",
+        "removeOlder": 1,
+        "removeOlderPoints": "",
+        "removeOlderUnit": "3600",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#1f77b4",
+            "#aec7e8",
+            "#ff7f0e",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 990,
+        "y": 200,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "866d8b583a443866",
+        "type": "ui_text",
+        "z": "0280717f5b143c5b",
+        "group": "grp_sensors",
+        "order": 8,
+        "width": 0,
+        "height": 0,
+        "name": "",
+        "label": "Avg Temp (°C)",
+        "format": "{{msg.payload}}",
+        "layout": "row-spread",
+        "className": "",
+        "style": false,
+        "font": "",
+        "fontSize": 16,
+        "color": "#000000",
+        "x": 980,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "aa4943f62a1c09e6",
+        "type": "function",
+        "z": "0280717f5b143c5b",
+        "name": "Hum Rolling Avg (10 mins)",
+        "func": "\n// Get stored data (array of objects)\nlet readings = context.get(\"readings\") || [];\n\n// Current time\nlet now = Date.now();\n\n// Get value \nlet value = msg.payload.humidity;\n\n// Add new reading\nif (value !== undefined) {\n    readings.push({\n        value: value,\n        time: now\n    });\n}\n\n// Keep only last 10 minutes (600000 ms)\nreadings = readings.filter(r => now - r.time <= 600000);\n\n// Calculate average\nlet sum = 0;\nfor (let i = 0; i < readings.length; i++) {\n    sum += readings[i].value;\n}\n\nlet avg = readings.length > 0 ? sum / readings.length : 0;\n\n// Save back\ncontext.set(\"readings\", readings);\n\n// Output to dashboard\nmsg.payload = avg.toFixed(1) + \" %\";\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 760,
+        "y": 300,
+        "wires": [
+            [
+                "6ffc5c464b7ea748",
+                "d22837c68de2913b"
+            ]
+        ]
+    },
+    {
+        "id": "7bb34af51b99bfcb",
+        "type": "function",
+        "z": "0280717f5b143c5b",
+        "name": "Soil_moisture Roling Avg (10min)",
+        "func": "// Get stored data (array of objects)\nlet readings = context.get(\"readings\") || [];\n\n// Current time\nlet now = Date.now();\n\n// Get value (CHANGE this for temp/humidity/soil)\nlet value = msg.payload.soil_moisture;\n\n// Add new reading\nif (value !== undefined) {\n    readings.push({\n        value: value,\n        time: now\n    });\n}\n\n// Keep only last 10 minutes (600000 ms)\nreadings = readings.filter(r => now - r.time <= 600000);\n\n// Calculate average\nlet sum = 0;\nfor (let i = 0; i < readings.length; i++) {\n    sum += readings[i].value;\n}\n\nlet avg = readings.length > 0 ? sum / readings.length : 0;\n\n// Save back\ncontext.set(\"readings\", readings);\n\n// Output to dashboard\nmsg.payload = avg.toFixed(1) + \" %\";\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 740,
+        "y": 380,
+        "wires": [
+            [
+                "ec3a828035d2d27d",
+                "0f201a58e0b9038a"
+            ]
+        ]
+    },
+    {
+        "id": "6ffc5c464b7ea748",
+        "type": "ui_chart",
+        "z": "0280717f5b143c5b",
+        "name": "Humidity Trend (%)",
+        "group": "grp_chart",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "label": "chart",
+        "chartType": "line",
+        "legend": "false",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "",
+        "dot": false,
+        "ymin": "",
+        "ymax": "",
+        "removeOlder": 1,
+        "removeOlderPoints": "",
+        "removeOlderUnit": "3600",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#1f77b4",
+            "#aec7e8",
+            "#ff7f0e",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 1030,
+        "y": 280,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "d22837c68de2913b",
+        "type": "ui_text",
+        "z": "0280717f5b143c5b",
+        "group": "grp_sensors",
+        "order": 9,
+        "width": 0,
+        "height": 0,
+        "name": "Avg Humidity (%)",
+        "label": "text",
+        "format": "{{msg.payload}}",
+        "layout": "row-spread",
+        "className": "",
+        "style": false,
+        "font": "",
+        "fontSize": 16,
+        "color": "#000000",
+        "x": 1030,
+        "y": 320,
+        "wires": []
+    },
+    {
+        "id": "ec3a828035d2d27d",
+        "type": "ui_chart",
+        "z": "0280717f5b143c5b",
+        "name": "Soil Moisture Trend (%)",
+        "group": "grp_chart",
+        "order": 3,
+        "width": 0,
+        "height": 0,
+        "label": "chart",
+        "chartType": "line",
+        "legend": "false",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "",
+        "dot": false,
+        "ymin": "",
+        "ymax": "",
+        "removeOlder": 1,
+        "removeOlderPoints": "",
+        "removeOlderUnit": "3600",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#1f77b4",
+            "#aec7e8",
+            "#ff7f0e",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 1050,
+        "y": 360,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "0f201a58e0b9038a",
+        "type": "ui_text",
+        "z": "0280717f5b143c5b",
+        "group": "grp_sensors",
+        "order": 10,
+        "width": 0,
+        "height": 0,
+        "name": "Avg Soil Moisture (%)",
+        "label": "text",
+        "format": "{{msg.payload}}",
+        "layout": "row-spread",
+        "className": "",
+        "style": false,
+        "font": "",
+        "fontSize": 16,
+        "color": "#000000",
+        "x": 1040,
+        "y": 400,
+        "wires": []
     }
 ]
